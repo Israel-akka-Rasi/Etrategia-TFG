@@ -7,11 +7,14 @@ public class Tropa : MonoBehaviour
     [Header("Identidad")]
     public int equipo; 
     public int salud = 3;
-    private float saludMaxima; // Necesario para calcular el porcentaje de la barra (ej: 2 de 3)
+    public float saludMaxima; // Necesario para calcular el porcentaje de la barra (ej: 2 de 3)
 
     [Header("Visuales")]
     public GameObject indicadorSeleccion;
     public Image barraSalud; // ¡NUEVO! Aquí arrastraremos la imagen de "Relleno" verde
+
+    [Header("Interfaz")]
+    public Sprite retratoTropa; // Aquí arrastrarás la foto 2D de tu soldado en el Inspector
 
     private NavMeshAgent agente;
 

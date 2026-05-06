@@ -23,7 +23,7 @@ void Update()
             arrastrando = true;
             if (cajaVisual != null) cajaVisual.gameObject.SetActive(true);
 
-            // Siempre que hacemos un clic nuevo, deseleccionamos el batallón anterior
+            // Siempre que hacemos un clic nuevo, deseleccionamos el batallón anterior y ocultamos el panel UI
             DeseleccionarTodo();
 
             Ray rayo = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -40,11 +40,21 @@ void Update()
                     
                     arrastrando = false; // Como hemos tocado a uno, no dibujamos la caja
                     if (cajaVisual != null) cajaVisual.gameObject.SetActive(false);
+
+                    // --- ¡NUEVO: CONEXIÓN CON LA INTERFAZ! ---
+                    Combate scriptCombate = impacto.collider.GetComponent<Combate>();
+                    
+                    if (scriptCombate != null)
+                    {
+                        // Le pasamos la vida desde Tropa y el daño desde Combate. 
+                        // NOTA: Si en tu script Tropa las variables no se llaman "salud" y "saludMaxima", cámbialo por tus nombres reales.
+                        UIManager.Instancia.MostrarInfoTropa(tropaTocada, (int)scriptCombate.dano);
+                    }
                 }
                 else if (baseTocada != null)
                 {
                     // Clic en el castillo
-                    baseTocada.IntentarComprarTropa();
+                    baseTocada.IntentarComprarTropaBasica(); // Actualizado a la nueva función de Edades
                     arrastrando = false;
                     if (cajaVisual != null) cajaVisual.gameObject.SetActive(false);
                 }
@@ -83,12 +93,9 @@ void Update()
             if (Physics.Raycast(rayo, out RaycastHit impacto))
             {
                 Tropa enemigoTocado = impacto.collider.GetComponent<Tropa>();
-                // ¡NUEVO! Comprobamos si el rayo ha chocado contra un castillo
                 BaseMilitar baseTocada = impacto.collider.GetComponent<BaseMilitar>(); 
                 Vector3 destinoCentral = impacto.point;
 
-                // --- CÁLCULO DE FORMACIÓN ORGÁNICA ---
-                // El círculo de llegada crece un poco cuantos más soldados tengamos
                 float radioDeLlegada = 0.5f + (Mathf.Sqrt(tropasSeleccionadas.Count) * 0.4f); 
 
                 foreach (Tropa soldado in tropasSeleccionadas)
@@ -97,32 +104,25 @@ void Update()
 
                     Combate scriptCombate = soldado.GetComponent<Combate>();
 
-                    // 1. ATAQUE A TROPA: Van directos a por el enemigo
                     if (enemigoTocado != null && enemigoTocado.equipo == 1)
                     {
                         if (scriptCombate != null) scriptCombate.OrdenarAtaque(enemigoTocado.transform);
                     }
-                    // 2. ASEDIO A CASTILLO: Van a derribar la base enemiga
                     else if (baseTocada != null && baseTocada.equipo == 1)
                     {
                         if (scriptCombate != null) scriptCombate.OrdenarAtaque(baseTocada.transform);
                     }
-                    // 3. MOVIMIENTO ORGÁNICO: Si clicamos en suelo libre
                     else if (impacto.collider.CompareTag("Transitable"))
                     {
-                        // MOVIMIENTO ORGÁNICO:
-                        // 1. Generamos un punto (X, Z) aleatorio dentro de nuestro círculo
                         Vector2 offsetAleatorio = UnityEngine.Random.insideUnitCircle * radioDeLlegada;
                         Vector3 destinoAleatorio = destinoCentral + new Vector3(offsetAleatorio.x, 0, offsetAleatorio.y);
 
-                        // 2. Seguridad: Nos aseguramos de que el punto aleatorio cae dentro del NavMesh (que no caiga en el agua)
                         UnityEngine.AI.NavMeshHit navHit;
                         if (UnityEngine.AI.NavMesh.SamplePosition(destinoAleatorio, out navHit, radioDeLlegada, UnityEngine.AI.NavMesh.AllAreas))
                         {
-                            destinoAleatorio = navHit.position; // Usamos el punto seguro
+                            destinoAleatorio = navHit.position; 
                         }
 
-                        // 3. Mandamos al soldado a ese punto
                         if (scriptCombate != null) scriptCombate.CancelarAtaque();
                         soldado.OrdenarMovimiento(destinoAleatorio);
                     }
@@ -142,6 +142,12 @@ void Update()
             if (soldado != null) soldado.ActivarSeleccion(false); // Apagamos los aros
         }
         tropasSeleccionadas.Clear(); // Vaciamos la lista
+        
+        // --- NUEVO: Apagamos el panel de la interfaz al hacer clic fuera ---
+        if (UIManager.Instancia != null)
+        {
+            UIManager.Instancia.OcultarPanelSeleccion();
+        }
     }
 
     void AtraparTropasEnCaja()

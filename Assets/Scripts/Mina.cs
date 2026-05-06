@@ -56,13 +56,13 @@ public class Mina : MonoBehaviour
         if (tropasAzules > 0 && tropasRojas == 0)
         {
             // ¡DOMINIO AZUL!
-            if (baseAzul != null) baseAzul.RecibirOroAdicional(tropasAzules * oroPorTropa);
+            if (baseAzul != null) baseAzul.RecibirRecurso("Oro", tropasAzules * oroPorTropa);
             CambiarColor(matAzul);
         }
         else if (tropasRojas > 0 && tropasAzules == 0)
         {
             // ¡DOMINIO ROJO!
-            if (baseRojo != null) baseRojo.RecibirOroAdicional(tropasRojas * oroPorTropa);
+            if (baseRojo != null) baseRojo.RecibirRecurso("Oro", tropasRojas * oroPorTropa);
             CambiarColor(matRojo);
         }
         else if (tropasAzules > 0 && tropasRojas > 0)

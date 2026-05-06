@@ -31,7 +31,7 @@ public class ControladorEnemigo : MonoBehaviour
     {
         // --- ACCIÓN 1: ECONOMÍA ---
         // La base intentará comprar un esqueleto siempre que tenga 5 de oro
-        miBase.IntentarComprarTropa();
+        miBase.IntentarComprarTropaBasica();
 
         // --- ACCIÓN 2: TÁCTICA MILITAR ---
         // Buscamos a todos los soldados que hay en el mapa
