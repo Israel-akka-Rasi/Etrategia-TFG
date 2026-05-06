@@ -1,0 +1,193 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &1880982622148230038
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 7.63851
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.35142
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 11.12
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 180
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
+      propertyPath: m_Name
+      value: building_mine_blue
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 106974798971847507}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1020692042345145139}
+  m_SourcePrefab: {fileID: 100100000, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
+--- !u!1 &1647189826293647047 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
+  m_PrefabInstance: {fileID: 1880982622148230038}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1020692042345145139
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1647189826293647047}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e3fdca004f2d45fe8abbed571a8abd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshModifier
+  m_SerializedVersion: 0
+  m_OverrideArea: 1
+  m_Area: 1
+  m_OverrideGenerateLinks: 0
+  m_GenerateLinks: 0
+  m_IgnoreFromBuild: 0
+  m_ApplyToChildren: 1
+  m_AffectedAgents: ffffffff
+--- !u!4 &2130254059795291261 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
+  m_PrefabInstance: {fileID: 1880982622148230038}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &2852872751255319873
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 2130254059795291261}
+    m_Modifications:
+    - target: {fileID: 2804473343331546642, guid: 725c036d73990724e85ce68f758616c0, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.001
+      objectReference: {fileID: 0}
+    - target: {fileID: 2804473343331546642, guid: 725c036d73990724e85ce68f758616c0, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2804473343331546642, guid: 725c036d73990724e85ce68f758616c0, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2804473343331546642, guid: 725c036d73990724e85ce68f758616c0, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2804473343331546642, guid: 725c036d73990724e85ce68f758616c0, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2804473343331546642, guid: 725c036d73990724e85ce68f758616c0, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2804473343331546642, guid: 725c036d73990724e85ce68f758616c0, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2804473343331546642, guid: 725c036d73990724e85ce68f758616c0, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2804473343331546642, guid: 725c036d73990724e85ce68f758616c0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2804473343331546642, guid: 725c036d73990724e85ce68f758616c0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2804473343331546642, guid: 725c036d73990724e85ce68f758616c0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4088098714436411343, guid: 725c036d73990724e85ce68f758616c0, type: 3}
+      propertyPath: m_Name
+      value: MinaOro
+      objectReference: {fileID: 0}
+    - target: {fileID: 4088098714436411343, guid: 725c036d73990724e85ce68f758616c0, type: 3}
+      propertyPath: m_Layer
+      value: 2
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4088098714436411343, guid: 725c036d73990724e85ce68f758616c0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8742203024809815346}
+  m_SourcePrefab: {fileID: 100100000, guid: 725c036d73990724e85ce68f758616c0, type: 3}
+--- !u!4 &106974798971847507 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2804473343331546642, guid: 725c036d73990724e85ce68f758616c0, type: 3}
+  m_PrefabInstance: {fileID: 2852872751255319873}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &2246355830687427214 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4088098714436411343, guid: 725c036d73990724e85ce68f758616c0, type: 3}
+  m_PrefabInstance: {fileID: 2852872751255319873}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8742203024809815346
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2246355830687427214}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e3fdca004f2d45fe8abbed571a8abd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshModifier
+  m_SerializedVersion: 0
+  m_OverrideArea: 0
+  m_Area: 0
+  m_OverrideGenerateLinks: 0
+  m_GenerateLinks: 0
+  m_IgnoreFromBuild: 1
+  m_ApplyToChildren: 1
+  m_AffectedAgents: ffffffff
