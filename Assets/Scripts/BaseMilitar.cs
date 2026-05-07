@@ -26,6 +26,8 @@ public class BaseMilitar : MonoBehaviour
     public Image barraSalud;
     public GameObject prefabTropa;
     public Transform puntoSpawn;
+    [Header("Evolución")]
+    public int costeBaseMejora = 50; // Madera necesaria para pasar al nivel 2
 
     void Start()
     {
@@ -102,15 +104,33 @@ public class BaseMilitar : MonoBehaviour
     }
 
     // --- LÓGICA DE MEJORA ---
-    public void IntentarMejorarCastillo()
+    public void MejorarCastillo()
     {
-        if (nivelCastillo == 1 && madera >= costeMejorarNivel2)
+        // El coste sube con el nivel: Nivel 1->50, Nivel 2->100, Nivel 3->150...
+        int costeActual = costeBaseMejora * nivelCastillo;
+
+        if (madera >= costeActual)
         {
-            madera -= costeMejorarNivel2;
-            nivelCastillo = 2;
-            poblacionMaxima = 15; 
-            Debug.Log("¡Avanzaste a la Edad de Piedra!");
+            madera -= costeActual;
+            nivelCastillo++;
+
+            // --- EFECTO 1: Aumentar Población (+2 por nivel) ---
+            poblacionMaxima += 2;
+
+            Debug.Log("¡Castillo mejorado! Ahora es Nivel " + nivelCastillo);
+
+            // --- EFECTO 2: Desbloqueos por nivel ---
+            if (nivelCastillo >= 5)
+            {
+                Debug.Log("¡Hito alcanzado! Ya puedes recolectar Piedra con unidades especializadas.");
+            }
+
+            // Actualizamos la interfaz para que se vea el nuevo nivel y población
             ActualizarTextosUI();
+        }
+        else
+        {
+            Debug.Log("Madera insuficiente. Necesitas " + costeActual + " y tienes " + madera);
         }
     }
 

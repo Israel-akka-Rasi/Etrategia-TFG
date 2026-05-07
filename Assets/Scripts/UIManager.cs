@@ -90,4 +90,19 @@ public class UIManager : MonoBehaviour
         tropaSeleccionada = null; // Soltamos a la tropa
         panelSeleccion.SetActive(false); 
     }
+
+    public void BotonMejorarCastillo()
+    {
+        // Buscamos todos los castillos en el mapa
+        BaseMilitar[] bases = FindObjectsOfType<BaseMilitar>();
+        foreach(BaseMilitar b in bases)
+        {
+            // Si es nuestro castillo (equipo 0), lo mejoramos
+            if(b.equipo == 0) 
+            {
+                b.MejorarCastillo();
+                break; // Paramos de buscar
+            }
+        }
+    }
 }

@@ -12,6 +12,7 @@ public class GeneradorTablero : MonoBehaviour
     public GameObject prefabMina;       // El generador de oro
     public GameObject prefabBaseAzul;   // Castillo azul
     public GameObject prefabBaseRoja;   // Castillo rojo
+    public GameObject prefabArbol;            //Arboles para talar
 
     [Header("Ajustes Hexagonales")]
     public float distanciaX = 1.73f;
@@ -23,7 +24,7 @@ public class GeneradorTablero : MonoBehaviour
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
         {0, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0}, // <-- Castillo Azul (4)
-        {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+        {0, 1, 1, 1, 6, 1, 1, 1, 1, 1, 1, 1, 1, 0},
         {0, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 0},
         {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
         {0, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 0}, // <-- Montaña Central 1
@@ -72,6 +73,7 @@ public class GeneradorTablero : MonoBehaviour
                     case 3: adorno = prefabMina; break;
                     case 4: adorno = prefabBaseAzul; break;
                     case 5: adorno = prefabBaseRoja; break;
+                    case 6: adorno = prefabArbol; break;
                 }
 
                 if (adorno != null)

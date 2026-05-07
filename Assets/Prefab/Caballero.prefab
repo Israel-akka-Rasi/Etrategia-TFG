@@ -103,6 +103,7 @@ GameObject:
   - component: {fileID: -1804685398656419747}
   - component: {fileID: 7752270921667781321}
   - component: {fileID: 264564440417642682}
+  - component: {fileID: -2510734480646810618}
   m_Layer: 0
   m_Name: Caballero
   m_TagString: Untagged
@@ -205,6 +206,23 @@ MonoBehaviour:
   rangoAtaque: 1.5
   tiempoEntreAtaques: 1
   radioVision: 5
+--- !u!114 &-2510734480646810618
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6471491849626687814}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36d176dbcfd351d4e8155b5fb9a14922, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Recolector
+  puedeMadera: 1
+  puedePiedra: 0
+  puedeOro: 0
+  tiempoEntreRecoleccion: 1.5
+  distanciaDeTrabajo: 1.5
 --- !u!1001 &32888068842790094
 PrefabInstance:
   m_ObjectHideFlags: 0
