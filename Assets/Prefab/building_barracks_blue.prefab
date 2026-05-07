@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &120434969486245074
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7940484165733265007}
+  m_Layer: 0
+  m_Name: PuntoSpawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7940484165733265007
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 120434969486245074}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: -1.7900009, y: 0, z: 0.099999905}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6053186323347688397}
+  m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
 --- !u!1 &291439611429674471
 GameObject:
   m_ObjectHideFlags: 0
@@ -345,6 +376,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: f2834984490667f489216ceb593b51a1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 915793616341102241}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: f2834984490667f489216ceb593b51a1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7940484165733265007}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f2834984490667f489216ceb593b51a1, type: 3}
       insertIndex: -1
@@ -399,13 +433,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BaseMilitar
   equipo: 0
+  nivelCastillo: 1
+  madera: 0
+  piedra: 0
   oro: 0
-  costeTropa: 5
-  prefabTropa: {fileID: 6471491849626687814, guid: 4c4e8a7dc9fc10f4389b8328944c650d, type: 3}
-  puntoSpawn: {fileID: 0}
+  poblacionActual: 1
+  poblacionMaxima: 5
+  costeTropaBasica: 10
+  costeMejorarNivel2: 20
   salud: 100
   barraSalud: {fileID: 8902486651088598316}
-  textoOro: {fileID: 4634051718239742960}
+  prefabTropa: {fileID: 6471491849626687814, guid: 4c4e8a7dc9fc10f4389b8328944c650d, type: 3}
+  puntoSpawn: {fileID: 7940484165733265007}
+  costeBaseMejora: 1
+  prefabCaballero: {fileID: 6471491849626687814, guid: 4c4e8a7dc9fc10f4389b8328944c650d, type: 3}
+  costeCaballero: 10
+  prefabMinero: {fileID: 6471491849626687814, guid: 4d6f935a73473204fa3f7712192113ab, type: 3}
+  costeMinero: 20
 --- !u!65 &-6037301274249422573
 BoxCollider:
   m_ObjectHideFlags: 0

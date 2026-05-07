@@ -1754,6 +1754,7 @@ MonoBehaviour:
   txtVidaUnidad: {fileID: 1676534026}
   txtAtaqueUnidad: {fileID: 2099630455}
   imgRetratoUnidad: {fileID: 1567032107}
+  panelReclutamiento: {fileID: 0}
 --- !u!4 &1364226288
 Transform:
   m_ObjectHideFlags: 0

@@ -18,7 +18,15 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI txtNombreUnidad;
     public TextMeshProUGUI txtVidaUnidad;
     public TextMeshProUGUI txtAtaqueUnidad;
-    public Image imgRetratoUnidad; 
+    public Image imgRetratoUnidad;
+
+    [Header("Menús")]
+    public GameObject panelReclutamiento;
+
+    [Header("Botones de Reclutamiento")]
+    public Button botonCaballero;
+    public Button botonMinero;
+    public Text textoRequisitoMinero; // Opcional: un texto que diga "Nivel 5 necesario"
 
     // --- ¡NUEVO! El vigía ---
     private Tropa tropaSeleccionada;
@@ -102,6 +110,62 @@ public class UIManager : MonoBehaviour
             {
                 b.MejorarCastillo();
                 break; // Paramos de buscar
+            }
+        }
+    }
+    public void BotonComprarCaballero()
+    {
+        BaseMilitar[] bases = FindObjectsOfType<BaseMilitar>();
+        
+        foreach (BaseMilitar b in bases)
+        {
+            if (b.equipo == 0) 
+            {
+                b.ComprarCaballero();
+                return; // Usamos return en vez de break para salir del todo
+            }
+        }
+        
+        // Si el código llega hasta aquí, es que no encontró ninguna base tuya
+        Debug.LogWarning("ERROR: No se ha encontrado ninguna base con el equipo 0.");
+    }
+
+    public void BotonComprarMinero()
+    {
+        BaseMilitar[] bases = FindObjectsOfType<BaseMilitar>();
+        foreach (BaseMilitar b in bases)
+        {
+            if (b.equipo == 0) 
+            {
+                b.ComprarMinero();
+                break;
+            }
+        }
+    }
+
+    // Modificamos este método para que chequee el nivel al abrirse
+    public void MostrarPanelReclutamiento(bool mostrar, int nivelActual)
+    {
+        if (panelReclutamiento != null)
+        {
+            panelReclutamiento.SetActive(mostrar);
+            
+            if (mostrar)
+            {
+                // El caballero siempre está disponible (Nv 1)
+                botonCaballero.interactable = true;
+
+                // El minero solo si el nivel es 5 o más
+                if (nivelActual >= 5)
+                {
+                    botonMinero.interactable = true;
+                    if(textoRequisitoMinero != null) textoRequisitoMinero.text = "Minero (20 Madera)";
+                }
+                else
+                {
+                    botonMinero.interactable = false; // Se pone gris automáticamente
+                    if(textoRequisitoMinero != null) textoRequisitoMinero.text = "Bloqueado (Nv. 5)";
+                }
             }
         }
     }

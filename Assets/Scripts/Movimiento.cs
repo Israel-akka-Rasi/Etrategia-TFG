@@ -17,8 +17,18 @@ void Update()
     // =========================================================
     // CLIC IZQUIERDO (0): SELECCIONAR, COMPRAR O CAJA
     // =========================================================
+    // =========================================================
+    // CLIC IZQUIERDO (0): SELECCIONAR, COMPRAR O CAJA
+    // =========================================================
     if (Input.GetMouseButtonDown(0))
     {
+        // --- ¡EL ESCUDO ANTI-CLICS FANTASMA! ---
+        // Si el ratón está sobre un elemento de la interfaz (como un botón o panel), ignoramos el resto.
+        if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+        {
+            return; 
+        }
+
         posInicialRaton = Input.mousePosition;
         arrastrando = true;
         if (cajaVisual != null) cajaVisual.gameObject.SetActive(true);
@@ -47,7 +57,11 @@ void Update()
             }
             else if (baseTocada != null)
             {
-                baseTocada.IntentarComprarTropaBasica();
+                // Clic en el castillo: ABRIMOS EL MENÚ en lugar de comprar
+                if (baseTocada.equipo == 0) // Solo abrimos el menú si es nuestro castillo
+                {
+                    UIManager.Instancia.MostrarPanelReclutamiento(true,baseTocada.nivelCastillo);
+                }
                 arrastrando = false;
                 if (cajaVisual != null) cajaVisual.gameObject.SetActive(false);
             }
@@ -165,6 +179,7 @@ void Update()
         if (UIManager.Instancia != null)
         {
             UIManager.Instancia.OcultarPanelSeleccion();
+            UIManager.Instancia.MostrarPanelReclutamiento(false,0);
         }
     }
 
