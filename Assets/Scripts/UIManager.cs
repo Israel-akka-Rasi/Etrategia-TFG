@@ -26,7 +26,11 @@ public class UIManager : MonoBehaviour
     [Header("Botones de Reclutamiento")]
     public Button botonCaballero;
     public Button botonMinero;
-    public Text textoRequisitoMinero; // Opcional: un texto que diga "Nivel 5 necesario"
+    public Button botonTesorero;
+
+    [Header("Textos de Requisitos")]
+    public TMPro.TextMeshProUGUI textoRequisitoMinero;
+    public TMPro.TextMeshProUGUI textoRequisitoTesorero;
 
     // --- ¡NUEVO! El vigía ---
     private Tropa tropaSeleccionada;
@@ -143,29 +147,63 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    public void BotonComprarTesorero()
+    {
+        BaseMilitar[] bases = FindObjectsOfType<BaseMilitar>();
+        foreach (BaseMilitar b in bases)
+        {
+            if (b.equipo == 0) 
+            {
+                b.ComprarTesorero();
+                break;
+            }
+        }
+    }
+
     // Modificamos este método para que chequee el nivel al abrirse
     public void MostrarPanelReclutamiento(bool mostrar, int nivelActual)
     {
-        if (panelReclutamiento != null)
-        {
-            panelReclutamiento.SetActive(mostrar);
-            
-            if (mostrar)
-            {
-                // El caballero siempre está disponible (Nv 1)
-                botonCaballero.interactable = true;
+        if (panelReclutamiento == null) return;
 
-                // El minero solo si el nivel es 5 o más
-                if (nivelActual >= 5)
-                {
-                    botonMinero.interactable = true;
-                    if(textoRequisitoMinero != null) textoRequisitoMinero.text = "Minero (20 Madera)";
-                }
-                else
-                {
-                    botonMinero.interactable = false; // Se pone gris automáticamente
-                    if(textoRequisitoMinero != null) textoRequisitoMinero.text = "Bloqueado (Nv. 5)";
-                }
+        panelReclutamiento.SetActive(mostrar);
+        if (!mostrar) return;
+
+        // 1. CABALLERO: Siempre disponible
+        botonCaballero.interactable = true;
+
+        // 2. MINERO: Nivel 5
+        if (nivelActual >= 5)
+        {
+            botonMinero.interactable = true;
+            if(textoRequisitoMinero != null) {
+                textoRequisitoMinero.text = "Minero (20 Madera)";
+                textoRequisitoMinero.color = Color.white;
+            }
+        }
+        else
+        {
+            botonMinero.interactable = false;
+            if(textoRequisitoMinero != null) {
+                textoRequisitoMinero.text = "Bloqueado (Nv. 5)";
+                textoRequisitoMinero.color = Color.red;
+            }
+        }
+
+        // 3. TESORERO: Nivel 10
+        if (nivelActual >= 10)
+        {
+            botonTesorero.interactable = true;
+            if(textoRequisitoTesorero != null) {
+                textoRequisitoTesorero.text = "Tesorero (50 Mad / 30 Pied)";
+                textoRequisitoTesorero.color = Color.white;
+            }
+        }
+        else
+        {
+            botonTesorero.interactable = false;
+            if(textoRequisitoTesorero != null) {
+                textoRequisitoTesorero.text = "Bloqueado (Nv. 10)";
+                textoRequisitoTesorero.color = Color.red;
             }
         }
     }

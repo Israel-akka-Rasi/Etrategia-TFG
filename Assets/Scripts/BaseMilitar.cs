@@ -5,7 +5,7 @@ public class BaseMilitar : MonoBehaviour
 {
     [Header("Identidad y Progreso")]
     public int equipo; // 0 = Azul (Jugador), 1 = Rojo (Enemigo)
-    public int nivelCastillo = 1; // 1 = Madera, 2 = Piedra, 3 = Oro
+    public int nivelCastillo = 1; // 15 es el máximo
 
     [Header("Bóveda de Recursos")]
     public int madera = 0;
@@ -16,18 +16,14 @@ public class BaseMilitar : MonoBehaviour
     public int poblacionActual = 1; 
     public int poblacionMaxima = 5; 
 
-    [Header("Costes (Nivel 1)")]
-    public int costeTropaBasica = 10; 
-    public int costeMejorarNivel2 = 50; 
-
     [Header("Combate y Spawn")]
     public float salud = 1000f;
     private float saludMaxima;
     public Image barraSalud;
-    public GameObject prefabTropa;
     public Transform puntoSpawn;
+
     [Header("Evolución")]
-    public int costeBaseMejora = 50; // Madera necesaria para pasar al nivel 2
+    public int costeBaseMejora = 50; // Madera base para subir niveles
 
     [Header("Reclutamiento de Tropas")]
     public GameObject prefabCaballero;
@@ -36,29 +32,26 @@ public class BaseMilitar : MonoBehaviour
     public GameObject prefabMinero;
     public int costeMinero = 20; // Madera
 
+    public GameObject prefabTesorero;
+    public int maderaTesorero = 20;
+    public int piedraTesorero = 15; 
+
     void Start()
     {
         saludMaxima = salud;
         
-        // --- NUEVO: TROPA INICIAL GRATIS ---
-        // Llamamos directamente a la fábrica una vez al empezar la partida
-        GenerarTropa(); 
+        // --- TROPA INICIAL GRATIS ---
+        // Instanciamos el primer caballero directamente en el punto de spawn
+        if (prefabCaballero != null && puntoSpawn != null)
+        {
+            Instantiate(prefabCaballero, puntoSpawn.position + (puntoSpawn.forward * 1.5f), Quaternion.identity);
+        }
         
-        // Actualizamos la UI al arrancar para que no salgan ceros
+        // Actualizamos la UI al arrancar
         ActualizarTextosUI();
     }
 
-    // --- NUEVO: GENERACIÓN PASIVA ---
-    /*void GenerarRecursoPasivo()
-    {
-        // En nivel 1 generamos madera, luego podríamos cambiarlo
-        if (nivelCastillo == 1) madera += 1;
-        else oro += 1;
-
-        ActualizarTextosUI();
-    }*/
-
-    // --- NUEVO: RECOLECCIÓN DEL MAPA (Bosques/Minas) ---
+    // --- RECOLECCIÓN DEL MAPA ---
     public void RecibirRecurso(string tipo, int cantidad)
     {
         if (tipo == "Madera") madera += cantidad;
@@ -71,76 +64,61 @@ public class BaseMilitar : MonoBehaviour
     // --- CONEXIÓN CON LA INTERFAZ ---
     public void ActualizarTextosUI()
     {
-        // Solo enviamos datos al Canvas si es NUESTRA base (Equipo 0)
         if (equipo == 0 && UIManager.Instancia != null)
         {
             UIManager.Instancia.ActualizarEconomia(nivelCastillo, poblacionActual, poblacionMaxima, madera, piedra, oro);
         }
     }
 
-    // --- LÓGICA DE COMPRA ---
-    public void IntentarComprarTropaBasica()
-    {
-        if (poblacionActual >= poblacionMaxima)
-        {
-            Debug.Log("¡Límite de población alcanzado! Necesitas mejorar el castillo.");
-            return; 
-        }
-
-        if (madera >= costeTropaBasica)
-        {
-            madera -= costeTropaBasica;
-            poblacionActual++;
-            ActualizarTextosUI(); // Refrescamos la madera y la población en pantalla
-            GenerarTropa(); 
-        }
-    }
-
-    // --- LÓGICA DE SPAWN ---
-    void GenerarTropa()
-    {
-        Vector3 posicionAparicion = puntoSpawn != null ? puntoSpawn.position : transform.position;
-        posicionAparicion += (Vector3)(Random.insideUnitCircle * 2f);
-        posicionAparicion.y = transform.position.y;
-
-        UnityEngine.AI.NavMeshHit hit;
-        if (UnityEngine.AI.NavMesh.SamplePosition(posicionAparicion, out hit, 4f, UnityEngine.AI.NavMesh.AllAreas))
-        {
-            Instantiate(prefabTropa, hit.position, Quaternion.identity);
-        }
-    }
-
     // --- LÓGICA DE MEJORA ---
     public void MejorarCastillo()
     {
-        int costeActual = costeBaseMejora * nivelCastillo;
+        if (nivelCastillo >= 15) return;
 
-        if (madera >= costeActual)
+        int maderaNecesaria = 0;
+        int piedraNecesaria = 0;
+        int oroNecesario = 0;
+
+        if (nivelCastillo < 5) 
         {
-            madera -= costeActual;
+            maderaNecesaria = costeBaseMejora * nivelCastillo;
+        }
+        else if (nivelCastillo < 10) 
+        {
+            maderaNecesaria = costeBaseMejora * nivelCastillo;
+            piedraNecesaria = 20 * (nivelCastillo - 4); 
+        }
+        else 
+        {
+            piedraNecesaria = 50;
+            oroNecesario = 10 * (nivelCastillo - 10);
+        }
+
+        if (madera >= maderaNecesaria && piedra >= piedraNecesaria && oro >= oroNecesario)
+        {
+            madera -= maderaNecesaria;
+            piedra -= piedraNecesaria;
+            oro -= oroNecesario;
+            
             nivelCastillo++;
-            poblacionMaxima += 2;
+            poblacionMaxima += 2; 
 
-            Debug.Log("¡Castillo mejorado! Ahora es Nivel " + nivelCastillo);
+            Debug.Log($"Mejorado a Nivel {nivelCastillo}. Costó: M:{maderaNecesaria} P:{piedraNecesaria} O:{oroNecesario}");
 
-            // --- NUEVO: Refrescar la UI de reclutamiento al subir de nivel ---
-            // Si somos el jugador (equipo 0), le pedimos al UIManager que actualice los botones
-            if (equipo == 0 && UIManager.Instancia != null)
-            {
-                // Pasamos 'true' para que se mantenga abierto y el nuevo nivel para que chequee los botones
-                UIManager.Instancia.MostrarPanelReclutamiento(true, nivelCastillo);
-            }
-
-            if (nivelCastillo >= 5)
-            {
-                Debug.Log("¡Hito alcanzado! Ya puedes recolectar Piedra con unidades especializadas.");
-            }
-
+            if (equipo == 0) ActualizarInterfazAlMejorar();
             ActualizarTextosUI();
         }
         else
         {
-            Debug.Log("Madera insuficiente. Necesitas " + costeActual + " y tienes " + madera);
+            Debug.Log("Faltan recursos para mejorar el castillo.");
+        }
+    }
+
+    void ActualizarInterfazAlMejorar()
+    {
+        if (UIManager.Instancia != null)
+        {
+            UIManager.Instancia.MostrarPanelReclutamiento(true, nivelCastillo);
         }
     }
 
@@ -165,6 +143,7 @@ public class BaseMilitar : MonoBehaviour
         }
     }
 
+    // --- RECLUTAMIENTO ---
     public void ComprarCaballero()
     {
         if (poblacionActual >= poblacionMaxima) return;
@@ -173,30 +152,11 @@ public class BaseMilitar : MonoBehaviour
         {
             madera -= costeCaballero;
             poblacionActual++;
-
-            // 1. Variación aleatoria un poco más dispersa
-            Vector3 variacion = new Vector3(Random.Range(-0.8f, 0.8f), 0, Random.Range(-0.8f, 0.8f));
-            Vector3 posicionFinal = puntoSpawn.position + variacion;
-
-            GameObject nuevaTropa = Instantiate(prefabCaballero, posicionFinal, Quaternion.identity);
-
-            Tropa scriptTropa = nuevaTropa.GetComponent<Tropa>();
-            if (scriptTropa != null)
-            {
-                // 2. Bajamos la distancia de 2.0 a 1.0 metros
-                float distanciaDespeje = 1.0f; 
-                
-                // El punto de destino será un poco hacia adelante (flecha azul) + la variación
-                Vector3 puntoDespeje = puntoSpawn.position + (puntoSpawn.forward * distanciaDespeje) + (variacion * 0.5f);
-                
-                scriptTropa.OrdenarMovimiento(puntoDespeje);
-            }
-
+            RealizarSpawnConDesplazamiento(prefabCaballero);
             ActualizarTextosUI();
         }
     }
 
-    // Esta función irá al botón del Minero
     public void ComprarMinero()
     {
         if (nivelCastillo < 5) return;
@@ -206,23 +166,43 @@ public class BaseMilitar : MonoBehaviour
         {
             madera -= costeMinero;
             poblacionActual++;
-
-            // 1. Añadimos el mismo margen aleatorio que al caballero
-            Vector3 variacion = new Vector3(Random.Range(-0.8f, 0.8f), 0, Random.Range(-0.8f, 0.8f));
-            Vector3 posicionFinal = puntoSpawn.position + variacion;
-
-            GameObject nuevoMinero = Instantiate(prefabMinero, posicionFinal, Quaternion.identity);
-
-            // 2. Le damos la orden de caminar un poco hacia adelante para despejar la puerta
-            Tropa scriptTropa = nuevoMinero.GetComponent<Tropa>();
-            if (scriptTropa != null)
-            {
-                // Usamos la misma lógica: 1 metro hacia adelante (puntoSpawn.forward)
-                Vector3 puntoDespeje = puntoSpawn.position + (puntoSpawn.forward * 1.0f) + (variacion * 0.5f);
-                scriptTropa.OrdenarMovimiento(puntoDespeje);
-            }
-
+            RealizarSpawnConDesplazamiento(prefabMinero);
             ActualizarTextosUI();
+        }
+    }
+
+    public void ComprarTesorero()
+    {
+        if (nivelCastillo < 10) return;
+        if (poblacionActual >= poblacionMaxima) return;
+
+        if (madera >= maderaTesorero && piedra >= piedraTesorero)
+        {
+            madera -= maderaTesorero;
+            piedra -= piedraTesorero;
+            poblacionActual++;
+            RealizarSpawnConDesplazamiento(prefabTesorero);
+            ActualizarTextosUI();
+        }
+        else
+        {
+            Debug.Log("Faltan recursos para el Tesorero.");
+        }
+    }
+
+    // Función unificada para no repetir código visual al comprar tropas
+    private void RealizarSpawnConDesplazamiento(GameObject prefabUnidad)
+    {
+        Vector3 variacion = new Vector3(Random.Range(-0.8f, 0.8f), 0, Random.Range(-0.8f, 0.8f));
+        Vector3 posicionFinal = puntoSpawn.position + variacion;
+
+        GameObject nuevaTropa = Instantiate(prefabUnidad, posicionFinal, Quaternion.identity);
+
+        Tropa scriptTropa = nuevaTropa.GetComponent<Tropa>();
+        if (scriptTropa != null)
+        {
+            Vector3 puntoDespeje = puntoSpawn.position + (puntoSpawn.forward * 1.0f) + (variacion * 0.5f);
+            scriptTropa.OrdenarMovimiento(puntoDespeje);
         }
     }
 }

@@ -62,6 +62,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1020692042345145139}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6821651168738582292}
   m_SourcePrefab: {fileID: 100100000, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
 --- !u!1 &1647189826293647047 stripped
 GameObject:
@@ -88,6 +91,21 @@ MonoBehaviour:
   m_IgnoreFromBuild: 0
   m_ApplyToChildren: 1
   m_AffectedAgents: ffffffff
+--- !u!114 &6821651168738582292
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1647189826293647047}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc76d35faaf8bc747b17b72c8fb1c7fa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Recurso
+  tipo: 2
+  reservaHabilitada: 100
+  cantidadPorTanda: 2
 --- !u!4 &2130254059795291261 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
