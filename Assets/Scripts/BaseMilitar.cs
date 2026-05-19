@@ -116,9 +116,17 @@ public class BaseMilitar : MonoBehaviour
 
     void ActualizarInterfazAlMejorar()
     {
-        if (UIManager.Instancia != null)
+        if (UIManager.Instancia != null && UIManager.Instancia.panelReclutamiento != null)
         {
-            UIManager.Instancia.MostrarPanelReclutamiento(true, nivelCastillo);
+            // 1. Miramos si el panel está encendido (visible) en la pantalla
+            bool estaAbierto = UIManager.Instancia.panelReclutamiento.activeSelf;
+
+            // 2. Si ya estaba abierto, lo refrescamos para desbloquear botones. 
+            // Si estaba cerrado, lo dejamos en paz.
+            if (estaAbierto)
+            {
+                UIManager.Instancia.MostrarPanelReclutamiento(true, nivelCastillo);
+            }
         }
     }
 

@@ -52,42 +52,30 @@ PrefabInstance:
       propertyPath: m_Name
       value: mountain_C_grass
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: bf53f5b26c28bc640814f89987975686, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3451118302482216456, guid: bf53f5b26c28bc640814f89987975686, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: bf53f5b26c28bc640814f89987975686, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 8615592828614651615}
+      addedObject: {fileID: -284231865384000952}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: bf53f5b26c28bc640814f89987975686, type: 3}
       insertIndex: -1
-      addedObject: {fileID: -284231865384000952}
+      addedObject: {fileID: -175060282216463025}
   m_SourcePrefab: {fileID: 100100000, guid: bf53f5b26c28bc640814f89987975686, type: 3}
 --- !u!1 &9209908622903840482 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: bf53f5b26c28bc640814f89987975686, type: 3}
   m_PrefabInstance: {fileID: 8291481821329273779}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &8615592828614651615
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9209908622903840482}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1e3fdca004f2d45fe8abbed571a8abd5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshModifier
-  m_SerializedVersion: 0
-  m_OverrideArea: 1
-  m_Area: 1
-  m_OverrideGenerateLinks: 0
-  m_GenerateLinks: 0
-  m_IgnoreFromBuild: 0
-  m_ApplyToChildren: 1
-  m_AffectedAgents: ffffffff
 --- !u!114 &-284231865384000952
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -103,3 +91,19 @@ MonoBehaviour:
   tipo: 1
   reservaHabilitada: 10000
   cantidadPorTanda: 1000
+--- !u!208 &-175060282216463025
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9209908622903840482}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 0.87900007, y: 0.777, z: 1.011}
+  m_MoveThreshold: 0.1
+  m_Carve: 1
+  m_CarveOnlyStationary: 1
+  m_Center: {x: -0.028, y: 0.777, z: -0.006}
+  m_TimeToStationary: 0.5

@@ -50,7 +50,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
       propertyPath: m_Name
-      value: building_mine_blue
+      value: Edificio_Mina
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3451118302482216456, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
+      propertyPath: m_Enabled
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -61,36 +69,16 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1020692042345145139}
+      addedObject: {fileID: 6821651168738582292}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6821651168738582292}
+      addedObject: {fileID: 7750985773932157206}
   m_SourcePrefab: {fileID: 100100000, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
 --- !u!1 &1647189826293647047 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
   m_PrefabInstance: {fileID: 1880982622148230038}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1020692042345145139
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1647189826293647047}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1e3fdca004f2d45fe8abbed571a8abd5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshModifier
-  m_SerializedVersion: 0
-  m_OverrideArea: 1
-  m_Area: 1
-  m_OverrideGenerateLinks: 0
-  m_GenerateLinks: 0
-  m_IgnoreFromBuild: 0
-  m_ApplyToChildren: 1
-  m_AffectedAgents: ffffffff
 --- !u!114 &6821651168738582292
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -106,6 +94,22 @@ MonoBehaviour:
   tipo: 2
   reservaHabilitada: 100
   cantidadPorTanda: 2
+--- !u!208 &7750985773932157206
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1647189826293647047}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 0.80300003, y: 0.568, z: 0.96000004}
+  m_MoveThreshold: 0.1
+  m_Carve: 1
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0.014, y: 0.568, z: -0.060000002}
+  m_TimeToStationary: 0.5
 --- !u!4 &2130254059795291261 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 8ba7826f463d43e42a437ce33e4dd99b, type: 3}
@@ -169,7 +173,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4088098714436411343, guid: 725c036d73990724e85ce68f758616c0, type: 3}
       propertyPath: m_Layer
-      value: 2
+      value: 3
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

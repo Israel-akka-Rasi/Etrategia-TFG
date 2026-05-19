@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 855288399551541190}
   - component: {fileID: 3651816282001730460}
   - component: {fileID: 1031536891326134597}
-  m_Layer: 5
+  m_Layer: 3
   m_Name: TextoOro
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -189,7 +189,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: b0554f8ab3c0a964ab623cb336bcf8dd, type: 3}
       propertyPath: m_Name
-      value: building_barracks_red
+      value: Edificio_Enemigo
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: b0554f8ab3c0a964ab623cb336bcf8dd, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3451118302482216456, guid: b0554f8ab3c0a964ab623cb336bcf8dd, type: 3}
+      propertyPath: m_Enabled
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -200,42 +208,19 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b0554f8ab3c0a964ab623cb336bcf8dd, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6283137295890128556}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b0554f8ab3c0a964ab623cb336bcf8dd, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 4255048614646179990}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b0554f8ab3c0a964ab623cb336bcf8dd, type: 3}
       insertIndex: -1
       addedObject: {fileID: -2253029541501793997}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b0554f8ab3c0a964ab623cb336bcf8dd, type: 3}
       insertIndex: -1
-      addedObject: {fileID: -7439993623508891810}
+      addedObject: {fileID: 5271854071529281657}
   m_SourcePrefab: {fileID: 100100000, guid: b0554f8ab3c0a964ab623cb336bcf8dd, type: 3}
 --- !u!1 &6088895961117913311 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: b0554f8ab3c0a964ab623cb336bcf8dd, type: 3}
   m_PrefabInstance: {fileID: 6359490919627181454}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &6283137295890128556
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6088895961117913311}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1e3fdca004f2d45fe8abbed571a8abd5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshModifier
-  m_SerializedVersion: 0
-  m_OverrideArea: 1
-  m_Area: 1
-  m_OverrideGenerateLinks: 0
-  m_GenerateLinks: 0
-  m_IgnoreFromBuild: 0
-  m_ApplyToChildren: 1
-  m_AffectedAgents: ffffffff
 --- !u!114 &4255048614646179990
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -255,12 +240,17 @@ MonoBehaviour:
   oro: 0
   poblacionActual: 1
   poblacionMaxima: 5
-  costeTropaBasica: 10
-  costeMejorarNivel2: 50
   salud: 5
   barraSalud: {fileID: 3357635469687583995}
-  prefabTropa: {fileID: 8302275368063891483, guid: e2ab2b5e591bdcc4b8b7aed2ff203e4e, type: 3}
   puntoSpawn: {fileID: 0}
+  costeBaseMejora: 50
+  prefabCaballero: {fileID: 0}
+  costeCaballero: 10
+  prefabMinero: {fileID: 0}
+  costeMinero: 20
+  prefabTesorero: {fileID: 0}
+  maderaTesorero: 20
+  piedraTesorero: 15
 --- !u!65 &-2253029541501793997
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -282,19 +272,22 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.440005, y: 1.6400526, z: 1.5660753}
   m_Center: {x: -0.00000011920929, y: 0.82002616, z: 0.06303522}
---- !u!114 &-7439993623508891810
-MonoBehaviour:
+--- !u!208 &5271854071529281657
+NavMeshObstacle:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6088895961117913311}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b1ee29c478b716348a2b4adc335f2464, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ControladorEnemigo
-  tiempoDePensamiento: 2
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 0.72, y: 0.82000005, z: 0.78300005}
+  m_MoveThreshold: 0.1
+  m_Carve: 1
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 0.82000005, z: 0.063}
+  m_TimeToStationary: 0.5
 --- !u!4 &6902833167255612005 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: b0554f8ab3c0a964ab623cb336bcf8dd, type: 3}
@@ -311,6 +304,10 @@ PrefabInstance:
     - target: {fileID: 234817971009656083, guid: 005c08810ffc98749a9f2d33331d83c0, type: 3}
       propertyPath: m_Name
       value: CanvasBarraVida
+      objectReference: {fileID: 0}
+    - target: {fileID: 234817971009656083, guid: 005c08810ffc98749a9f2d33331d83c0, type: 3}
+      propertyPath: m_Layer
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 3367593368060583008, guid: 005c08810ffc98749a9f2d33331d83c0, type: 3}
       propertyPath: m_Pivot.x
@@ -392,6 +389,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6388073916507018940, guid: 005c08810ffc98749a9f2d33331d83c0, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 6449833422648526829, guid: 005c08810ffc98749a9f2d33331d83c0, type: 3}
       propertyPath: m_FillMethod
       value: 0
@@ -399,6 +400,10 @@ PrefabInstance:
     - target: {fileID: 6485607472400023358, guid: 005c08810ffc98749a9f2d33331d83c0, type: 3}
       propertyPath: m_AdditionalShaderChannelsFlag
       value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 6490695244578965053, guid: 005c08810ffc98749a9f2d33331d83c0, type: 3}
+      propertyPath: m_Layer
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 7772146901824325668, guid: 005c08810ffc98749a9f2d33331d83c0, type: 3}
       propertyPath: m_LocalScale.x

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 2baa31916181af443a6b9f8962ff2944
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - castilloCentro: {fileID: 6053186323347688397, guid: a9be25af96668404b9a818e516bf5c7e, type: 3}
+  - matValido: {fileID: 2100000, guid: bc50ae45478bba54b8c85701c4a37f49, type: 2}
+  - matInvalido: {fileID: 2100000, guid: aaf64f8b56ad52743b468bf3b7aed130, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

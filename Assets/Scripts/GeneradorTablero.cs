@@ -12,7 +12,7 @@ public class GeneradorTablero : MonoBehaviour
     public GameObject prefabMina;       // El generador de oro
     public GameObject prefabBaseAzul;   // Castillo azul
     public GameObject prefabBaseRoja;   // Castillo rojo
-    public GameObject prefabArbol;            //Arboles para talar
+    public GameObject prefabArbol;      // Arboles para talar
 
     [Header("Ajustes Hexagonales")]
     public float distanciaX = 1.73f;
@@ -23,16 +23,16 @@ public class GeneradorTablero : MonoBehaviour
     {
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
-        {0, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0}, // <-- Castillo Azul (4)
-        {0, 1, 1, 1, 6, 1, 1, 1, 1, 1, 1, 1, 1, 0},
-        {0, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+        {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0}, // <-- Castillo Azul (4)
         {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
-        {0, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 0}, // <-- Montaña Central 1
+        {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+        {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+        {0, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 0}, // <-- Montaña Central 1
         {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0}, // <-- Montaña Central 2
         {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
-        {0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 0},
         {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
-        {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1, 0}, // <-- Castillo Rojo (5)
+        {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+        {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0}, // <-- Castillo Rojo (5)
         {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
     };
@@ -40,8 +40,6 @@ public class GeneradorTablero : MonoBehaviour
     void Start()
     {
         GenerarNivel();
-        
-        // ¡LA MAGIA! Una vez creado el mapa, horneamos el camino para la IA
         GetComponent<NavMeshSurface>().BuildNavMesh();
     }
 
@@ -49,6 +47,7 @@ public class GeneradorTablero : MonoBehaviour
     {
         int alto = mapa.GetLength(0); // Filas
         int ancho = mapa.GetLength(1); // Columnas
+        int capaSuelo = LayerMask.NameToLayer("Suelo"); // Guardamos el ID de la capa
 
         for (int z = 0; z < alto; z++)
         {
@@ -61,8 +60,16 @@ public class GeneradorTablero : MonoBehaviour
                 int tipoCasilla = mapa[z, x];
 
                 // 1. Poner el Suelo Base (Agua o Hierba)
-                GameObject sueloBase = (tipoCasilla == 0) ? prefabAgua : prefabHierba;
-                Instantiate(sueloBase, posicion, sueloBase.transform.rotation, this.transform);
+                GameObject prefabSuelo = (tipoCasilla == 0) ? prefabAgua : prefabHierba;
+                GameObject baldosaInstanciada = Instantiate(prefabSuelo, posicion, prefabSuelo.transform.rotation, this.transform);
+
+                // --- NUEVO: Asignar la capa al padre y a TODOS sus hijos ---
+                baldosaInstanciada.layer = capaSuelo;
+                foreach (Transform hijo in baldosaInstanciada.GetComponentsInChildren<Transform>(true))
+                {
+                    hijo.gameObject.layer = capaSuelo;
+                }
+                // -----------------------------------------------------------
 
                 // 2. Poner Edificios u Obstáculos encima (si no es 0 ni 1)
                 GameObject adorno = null;
@@ -78,7 +85,6 @@ public class GeneradorTablero : MonoBehaviour
 
                 if (adorno != null)
                 {
-                    // 2. Poner Edificios u Obstáculos encima (Cambiamos Quaternion.identity)
                     Instantiate(adorno, posicion, adorno.transform.rotation, this.transform);
                 }
             }
