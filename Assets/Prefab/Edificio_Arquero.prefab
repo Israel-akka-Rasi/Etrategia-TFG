@@ -1,0 +1,167 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2737152830147328585
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2367536872733836451}
+  m_Layer: 0
+  m_Name: PuntoSpawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2367536872733836451
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2737152830147328585}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.755}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3696183867005042144}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &3801533800691800587
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 0d1593d1d9c1e56408ef2ecf0d7e44ae, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -454.05542
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0d1593d1d9c1e56408ef2ecf0d7e44ae, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.0000000117492505
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0d1593d1d9c1e56408ef2ecf0d7e44ae, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 442.00763
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0d1593d1d9c1e56408ef2ecf0d7e44ae, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0d1593d1d9c1e56408ef2ecf0d7e44ae, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0d1593d1d9c1e56408ef2ecf0d7e44ae, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0d1593d1d9c1e56408ef2ecf0d7e44ae, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0d1593d1d9c1e56408ef2ecf0d7e44ae, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0d1593d1d9c1e56408ef2ecf0d7e44ae, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 180
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0d1593d1d9c1e56408ef2ecf0d7e44ae, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 0d1593d1d9c1e56408ef2ecf0d7e44ae, type: 3}
+      propertyPath: m_Name
+      value: Edificio_Arquero
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 0d1593d1d9c1e56408ef2ecf0d7e44ae, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2367536872733836451}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0d1593d1d9c1e56408ef2ecf0d7e44ae, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -8159226870617136817}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0d1593d1d9c1e56408ef2ecf0d7e44ae, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -6340464961754619933}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0d1593d1d9c1e56408ef2ecf0d7e44ae, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 564551485316019731}
+  m_SourcePrefab: {fileID: 100100000, guid: 0d1593d1d9c1e56408ef2ecf0d7e44ae, type: 3}
+--- !u!4 &3696183867005042144 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 0d1593d1d9c1e56408ef2ecf0d7e44ae, type: 3}
+  m_PrefabInstance: {fileID: 3801533800691800587}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &4035413318245885786 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 0d1593d1d9c1e56408ef2ecf0d7e44ae, type: 3}
+  m_PrefabInstance: {fileID: 3801533800691800587}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &-8159226870617136817
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4035413318245885786}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.670634, y: 1.7917347, z: 1.550816}
+  m_Center: {x: -0.035319924, y: 0.8958672, z: -0.0980584}
+--- !u!208 &-6340464961754619933
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4035413318245885786}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 0.83500004, y: 0.896, z: 0.77500004}
+  m_MoveThreshold: 0.1
+  m_Carve: 1
+  m_CarveOnlyStationary: 1
+  m_Center: {x: -0.035, y: 0.896, z: -0.098000005}
+  m_TimeToStationary: 0.5
+--- !u!114 &564551485316019731
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4035413318245885786}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01a7902d0aec8c04ebd8a6050d6fcfc6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EdificioReclutamiento
+  nombreEdificio: Galeria de Tiro
+  puntoSpawn: {fileID: 2367536872733836451}
+  prefabTropa: {fileID: 6471491849626687814, guid: 2bf0f00dada41aa45b5b8f0019474905, type: 3}
+  costeMadera: 20
+  costePiedra: 0
+  costeOro: 0

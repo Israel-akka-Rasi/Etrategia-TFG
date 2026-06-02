@@ -59,6 +59,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 79dd955c034e07749a51047eae522e83, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2305398901685374695}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 79dd955c034e07749a51047eae522e83, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6812750636999324148}
   m_SourcePrefab: {fileID: 100100000, guid: 79dd955c034e07749a51047eae522e83, type: 3}
 --- !u!1 &5101029694890535965 stripped
 GameObject:
@@ -85,3 +88,15 @@ MonoBehaviour:
   m_IgnoreFromBuild: 0
   m_ApplyToChildren: 1
   m_AffectedAgents: ffffffff
+--- !u!114 &6812750636999324148
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5101029694890535965}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f360416d79d5eb1478c777bcc7a09cb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CasillaNiebla

@@ -104,6 +104,7 @@ GameObject:
   - component: {fileID: 7752270921667781321}
   - component: {fileID: 264564440417642682}
   - component: {fileID: -2510734480646810618}
+  - component: {fileID: 6353139532005990545}
   m_Layer: 0
   m_Name: Caballero
   m_TagString: Untagged
@@ -223,6 +224,22 @@ MonoBehaviour:
   puedeOro: 0
   tiempoEntreRecoleccion: 1.5
   distanciaDeTrabajo: 1.5
+--- !u!114 &6353139532005990545
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6471491849626687814}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2496777dd2fe223458f458b69db93b2f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ReveladorNiebla
+  radioVision: 7
+  capaSuelo:
+    serializedVersion: 2
+    m_Bits: 64
 --- !u!1001 &32888068842790094
 PrefabInstance:
   m_ObjectHideFlags: 0

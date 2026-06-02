@@ -30,7 +30,7 @@ public class EdificioReclutamiento : MonoBehaviour
     }
 
     // --- FUNCIÓN DE COMPRA (Igual que en BaseMilitar, pero conectada al Castillo) ---
-    public void ComprarTropa()
+    /*public void ComprarTropa()
     {
         if (miCastillo == null) return;
         
@@ -61,6 +61,31 @@ public class EdificioReclutamiento : MonoBehaviour
         {
             Debug.Log("Faltan recursos en el castillo para reclutar aquí.");
         }
+    }*/
+
+    public void ComprarTropa()
+    {
+        if (miCastillo == null) return;
+        
+        // 1. Comprobamos población (esto lo mantenemos para no bugear el juego)
+        if (miCastillo.poblacionActual >= miCastillo.poblacionMaxima) 
+        {
+            Debug.Log("Población máxima alcanzada.");
+            return;
+        }
+
+        // 2. MODO PRUEBA: Nos saltamos la comprobación de recursos
+        // if (miCastillo.madera >= costeMadera && miCastillo.piedra >= costePiedra && miCastillo.oro >= costeOro)
+        // {
+            // 3. MODO PRUEBA: No restamos recursos
+            // miCastillo.madera -= costeMadera;
+            // miCastillo.piedra -= costePiedra;
+            // miCastillo.oro -= costeOro;
+            
+            miCastillo.poblacionActual++;
+            miCastillo.ActualizarTextosUI();
+            RealizarSpawnConDesplazamiento();
+        // }
     }
 
     // --- LÓGICA DE SPAWN (Copiada exacta de tu BaseMilitar) ---

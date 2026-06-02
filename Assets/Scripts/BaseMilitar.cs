@@ -156,46 +156,46 @@ public class BaseMilitar : MonoBehaviour
     {
         if (poblacionActual >= poblacionMaxima) return;
 
-        if (madera >= costeCaballero)
-        {
-            madera -= costeCaballero;
+        //if (madera >= costeCaballero)
+        //{
+        //    madera -= costeCaballero;
             poblacionActual++;
             RealizarSpawnConDesplazamiento(prefabCaballero);
             ActualizarTextosUI();
-        }
+        //}
     }
 
     public void ComprarMinero()
     {
-        if (nivelCastillo < 5) return;
+        //if (nivelCastillo < 5) return;
         if (poblacionActual >= poblacionMaxima) return;
 
-        if (madera >= costeMinero)
-        {
-            madera -= costeMinero;
+        //if (madera >= costeMinero)
+        //{
+            //madera -= costeMinero;
             poblacionActual++;
             RealizarSpawnConDesplazamiento(prefabMinero);
             ActualizarTextosUI();
-        }
+        //}
     }
 
     public void ComprarTesorero()
     {
-        if (nivelCastillo < 10) return;
+        //if (nivelCastillo < 10) return;
         if (poblacionActual >= poblacionMaxima) return;
 
-        if (madera >= maderaTesorero && piedra >= piedraTesorero)
-        {
-            madera -= maderaTesorero;
-            piedra -= piedraTesorero;
+       // if (madera >= maderaTesorero && piedra >= piedraTesorero)
+       // {
+        //    madera -= maderaTesorero;
+        //    piedra -= piedraTesorero;
             poblacionActual++;
             RealizarSpawnConDesplazamiento(prefabTesorero);
             ActualizarTextosUI();
-        }
-        else
-        {
-            Debug.Log("Faltan recursos para el Tesorero.");
-        }
+        //}
+        //else
+        //{
+           // Debug.Log("Faltan recursos para el Tesorero.");
+        //}
     }
 
     // Función unificada para no repetir código visual al comprar tropas
