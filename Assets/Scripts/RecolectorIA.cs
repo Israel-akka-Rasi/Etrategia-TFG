@@ -108,8 +108,9 @@ public class RecolectorIA : MonoBehaviour
 
         foreach (Recurso rec in recursos)
         {
-            // Solo nos interesan los recursos de NUESTRO tipo
+            // Solo nos interesan los recursos de NUESTRO tipo y que tengan reserva
             if (rec.tipo != tipoRecurso) continue;
+            if (!rec.EstaDisponible()) continue;
 
             float distanciaReal = Vector3.Distance(transform.position, rec.transform.position);
 
@@ -168,15 +169,19 @@ public class RecolectorIA : MonoBehaviour
         // La ventaja de dificultad también acelera la tala/minería
         yield return new WaitForSeconds(tiempoRecoleccion / bonoDificultad);
 
-        // Si el recurso sigue existiendo, cargamos y lo agotamos un poco
-        if (recursoObjetivo != null)
+        // Si el recurso sigue teniendo reserva, cargamos y lo agotamos un poco
+        if (recursoObjetivo != null && recursoObjetivo.EstaDisponible())
         {
             recursosLlevados = capacidadCarga;
             recursoObjetivo.SerExtraido(capacidadCarga);
         }
+        else
+        {
+            recursosLlevados = 0;
+        }
 
-        // Volvemos a la base a entregar
-        if (miBase != null)
+        // Si traemos algo, volvemos a la base; si el nodo estaba agotado, a buscar otro
+        if (recursosLlevados > 0 && miBase != null)
         {
             agente.SetDestination(miBase.transform.position);
             estadoActual = EstadoRecolector.VolviendoBase;

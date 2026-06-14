@@ -11,7 +11,7 @@ public class Recolector : MonoBehaviour
     [Header("Configuración")]
     public float tiempoEntreRecoleccion = 1.5f;
     public float distanciaDeTrabajo = 3.5f;
-    
+
     private float temporizador;
     private Recurso recursoObjetivo;
     private NavMeshAgent agente;
@@ -27,10 +27,16 @@ public class Recolector : MonoBehaviour
     {
         if (recursoObjetivo == null) return;
 
+        // Si el nodo se ha agotado, dejamos de trabajarlo
+        if (!recursoObjetivo.EstaDisponible())
+        {
+            DetenerTrabajo();
+            return;
+        }
+
         float distancia = Vector3.Distance(transform.position, recursoObjetivo.transform.position);
 
-        // USAMOS LA NUEVA VARIABLE DE DISTANCIA
-        if (distancia <= distanciaDeTrabajo) 
+        if (distancia <= distanciaDeTrabajo)
         {
             agente.isStopped = true;
             temporizador += Time.deltaTime;
@@ -50,19 +56,19 @@ public class Recolector : MonoBehaviour
 
     void EjecutarTrabajo()
     {
-        if (recursoObjetivo == null) return;
+        if (recursoObjetivo == null || !recursoObjetivo.EstaDisponible()) return;
 
         Debug.Log("¡" + gameObject.name + " está talando! + " + recursoObjetivo.cantidadPorTanda + " de " + recursoObjetivo.tipo);
 
-        // --- SOLUCIÓN: Buscar TODAS las bases y quedarnos con la nuestra ---
-        BaseMilitar[] todasLasBases = FindObjectsOfType<BaseMilitar>(); 
+        // Buscamos nuestra propia base y le entregamos
+        BaseMilitar[] todasLasBases = FindObjectsOfType<BaseMilitar>();
         foreach (BaseMilitar b in todasLasBases)
         {
             if (b.equipo == miTropa.equipo)
             {
                 b.RecibirRecurso(recursoObjetivo.tipo.ToString(), recursoObjetivo.cantidadPorTanda);
                 recursoObjetivo.SerExtraido(recursoObjetivo.cantidadPorTanda);
-                break; // Ya encontramos la nuestra, dejamos de buscar
+                break;
             }
         }
     }

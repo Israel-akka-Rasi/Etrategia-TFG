@@ -25,13 +25,6 @@ public class BaseMilitar : MonoBehaviour
     [Header("Evolución")]
     public int costeBaseMejora = 50; // Madera base para subir niveles
 
-    // ====================================================================
-    // RECLUTAMIENTO DESDE EL CASTILLO
-    // El castillo SOLO produce estas dos unidades. El resto (Minero, Arquero,
-    // Recolector de Oro, Gladiador) salen de sus edificios (EdificioReclutamiento).
-    // Esto vale igual para el jugador (equipo 0) y para la IA (equipo 1):
-    // cada base asigna en el Inspector los prefabs de SU bando.
-    // ====================================================================
     [Header("Reclutamiento del Castillo")]
     public GameObject prefabLeñador; // Recolector de madera (jugador: Recolector / IA: RecolectorIA)
     public int costeLeñador = 10;    // Madera
@@ -39,17 +32,53 @@ public class BaseMilitar : MonoBehaviour
     public GameObject prefabCaballero; // Unidad de combate básica
     public int costeCaballero = 10;    // Madera
 
+    // --- Estado inicial guardado, para poder restaurarlo al reiniciar el episodio ---
+    private int maderaInicial, piedraInicial, oroInicial;
+    private int poblacionInicial, poblacionMaximaInicial, nivelInicial;
+
     void Start()
     {
         saludMaxima = salud;
 
+        // Guardamos los valores de arranque (los que pusiste en el Inspector)
+        maderaInicial = madera;
+        piedraInicial = piedra;
+        oroInicial = oro;
+        poblacionInicial = poblacionActual;
+        poblacionMaximaInicial = poblacionMaxima;
+        nivelInicial = nivelCastillo;
+
         // --- TROPA INICIAL GRATIS: un Leñador ---
-        // No tocamos población porque ya arrancamos en 1 contando con él.
+        SpawnTropaInicial();
+
+        ActualizarTextosUI();
+    }
+
+    // Crea la tropa inicial gratis (el Leñador). Se usa al arrancar y al reiniciar.
+    public void SpawnTropaInicial()
+    {
         if (prefabLeñador != null && puntoSpawn != null)
         {
             GameObject leñadorInicial = SpawnUtils.SpawnConDesplazamiento(prefabLeñador, puntoSpawn, 1.5f);
             AsignarBaseSiEsRecolector(leñadorInicial);
         }
+    }
+
+    // ====================================================================
+    // REINICIO: restaura la base a su estado de arranque.
+    // (La parte de volver a crear el leñador inicial y reiniciar la IA va en la Parte B.)
+    // ====================================================================
+    public void ReiniciarEstado()
+    {
+        salud = saludMaxima;
+        if (barraSalud != null) barraSalud.fillAmount = 1f;
+
+        madera = maderaInicial;
+        piedra = piedraInicial;
+        oro = oroInicial;
+        poblacionActual = poblacionInicial;
+        poblacionMaxima = poblacionMaximaInicial;
+        nivelCastillo = nivelInicial;
 
         ActualizarTextosUI();
     }
@@ -140,20 +169,19 @@ public class BaseMilitar : MonoBehaviour
 
         if (salud <= 0)
         {
+            // Ya NO destruimos la base (así se puede restaurar al reiniciar).
+            // Solo avisamos del fin de partida: el GameManager decide si reinicia
+            // (entrenamiento) o muestra el cartel de victoria/derrota (jugable).
             GameManager gestor = FindObjectOfType<GameManager>();
             if (gestor != null)
             {
                 gestor.TerminarPartida(equipo);
             }
-            Destroy(gameObject);
         }
     }
 
     // ====================================================================
     // MÉTODO GENÉRICO DE RECLUTAMIENTO
-    // Comprueba población y recursos, cobra, spawnea y ASIGNA esta base a la
-    // tropa creada (clave cuando hay varias bases del mismo bando).
-    // Devuelve la tropa creada (o null si no se pudo).
     // ====================================================================
     public GameObject Reclutar(GameObject prefab, int costeM, int costeP = 0, int costeO = 0)
     {
@@ -173,8 +201,6 @@ public class BaseMilitar : MonoBehaviour
         return nuevaTropa;
     }
 
-    // Si la tropa recién creada es un recolector autónomo (IA), le decimos
-    // que esta es su base, para que entregue aquí y no en otra base roja.
     private void AsignarBaseSiEsRecolector(GameObject tropa)
     {
         if (tropa == null) return;
@@ -183,7 +209,6 @@ public class BaseMilitar : MonoBehaviour
         if (recolectorIA != null) recolectorIA.AsignarBase(this);
     }
 
-    // --- Atajos para las dos unidades del castillo ---
     public GameObject ComprarLeñador()
     {
         return Reclutar(prefabLeñador, costeLeñador);

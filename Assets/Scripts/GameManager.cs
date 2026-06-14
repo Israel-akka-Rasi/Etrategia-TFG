@@ -7,30 +7,52 @@ public class GameManager : MonoBehaviour
     public GameObject panelFinJuego;
     public TextMeshProUGUI textoResultado;
 
+    // Evita que el final se gestione varias veces en la misma partida
+    private bool partidaTerminada = false;
+
     void Start()
     {
-        // Al empezar la partida, escondemos el cartel y nos aseguramos de que el tiempo corra
         panelFinJuego.SetActive(false);
-        Time.timeScale = 1f; 
+        Time.timeScale = 1f;
     }
 
-    // Esta función la llamará el castillo justo antes de explotar
+    // La llama una base cuando es derrotada (su salud llega a 0).
+    // equipoDerrotado = el equipo que ha PERDIDO.
     public void TerminarPartida(int equipoDerrotado)
     {
-        panelFinJuego.SetActive(true); // Mostramos el cartel
+        if (partidaTerminada) return; // el final de esta partida ya se gestionó
+        partidaTerminada = true;
 
-        if (equipoDerrotado == 1) // Si muere el equipo 1 (Rojo)
+        // --- MODO ENTRENAMIENTO: reiniciar al instante, sin cartel ni pausa ---
+        if (GestorPartida.Instancia != null && GestorPartida.Instancia.modoEntrenamiento)
+        {
+            int ganador = (equipoDerrotado == 0) ? 1 : 0;
+            Debug.Log($"Partida terminada: perdió el equipo {equipoDerrotado} (ganó el {ganador}). Reiniciando...");
+            GestorPartida.Instancia.ReiniciarPartida();
+            return;
+        }
+
+        // --- MODO JUGABLE: cartel de victoria/derrota y pausa ---
+        panelFinJuego.SetActive(true);
+
+        if (equipoDerrotado == 1) // Perdió el rojo => ganas tú
         {
             textoResultado.text = "¡VICTORIA!";
             textoResultado.color = Color.green;
         }
-        else // Si muere el equipo 0 (Azul / Tú)
+        else // Perdió el azul => pierdes tú
         {
             textoResultado.text = "¡DERROTA!";
             textoResultado.color = Color.red;
         }
 
-        // ¡Magia! Detenemos el tiempo del juego por completo
-        Time.timeScale = 0f; 
+        Time.timeScale = 0f; // Congelamos el juego
+    }
+
+    // La llama el GestorPartida al reiniciar: deja todo listo para una partida nueva.
+    public void PrepararNuevaPartida()
+    {
+        partidaTerminada = false;
+        if (panelFinJuego != null) panelFinJuego.SetActive(false);
     }
 }

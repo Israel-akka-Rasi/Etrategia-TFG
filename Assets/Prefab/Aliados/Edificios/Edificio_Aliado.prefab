@@ -157,7 +157,7 @@ MonoBehaviour:
   oro: 0
   poblacionActual: 1
   poblacionMaxima: 5
-  salud: 1000
+  salud: 50
   barraSalud: {fileID: 0}
   puntoSpawn: {fileID: 5658263047682067279}
   costeBaseMejora: 50

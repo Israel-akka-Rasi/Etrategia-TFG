@@ -1,13 +1,9 @@
 using UnityEngine;
 
 // Utilidad compartida para spawnear tropas con una pequeña variación de posición.
-// Antes este mismo código estaba COPIADO en BaseMilitar.cs y en EdificioReclutamiento.cs.
-// Ahora vive en un solo sitio: si quieres cambiar cómo aparecen las tropas, lo cambias aquí.
+// Vive en un solo sitio para no duplicar este código en BaseMilitar y EdificioReclutamiento.
 public static class SpawnUtils
 {
-    // prefab          -> la unidad que queremos crear
-    // puntoSpawn      -> el objeto vacío desde donde aparece
-    // distanciaDespeje-> cuánto camina hacia adelante para no amontonarse en la puerta
     public static GameObject SpawnConDesplazamiento(GameObject prefab, Transform puntoSpawn, float distanciaDespeje = 1.0f)
     {
         if (prefab == null || puntoSpawn == null) return null;
@@ -16,6 +12,13 @@ public static class SpawnUtils
         Vector3 posicionFinal = puntoSpawn.position + variacion;
 
         GameObject nuevaTropa = Object.Instantiate(prefab, posicionFinal, Quaternion.identity);
+
+        // Si hay una partida en marcha, metemos la tropa en el contenedor dinámico
+        // para poder borrarla de golpe al reiniciar el episodio.
+        if (GestorPartida.Instancia != null && GestorPartida.Instancia.contenedorDinamico != null)
+        {
+            nuevaTropa.transform.SetParent(GestorPartida.Instancia.contenedorDinamico, true);
+        }
 
         Tropa scriptTropa = nuevaTropa.GetComponent<Tropa>();
         if (scriptTropa != null)

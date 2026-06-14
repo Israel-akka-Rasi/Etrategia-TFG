@@ -47,6 +47,10 @@ public class IAEnemiga : MonoBehaviour
     public float radioConstruccion = 10f;    // Distancia MÁXIMA desde el castillo (antes 15)
     public int cantidadEdificiosMaximos = 6;
     public float distanciaEntreEdificios = 5f;
+    [Space(5)]
+    public LayerMask capaObstaculos;     // Árboles, rocas... (la MISMA capa que usas en SistemaConstruccion)
+    public float radioLibre = 2.5f;      // Espacio despejado que se exige alrededor de cada edificio
+    public float correccionGradosY = 0f; // Giro de los edificios. Si las puertas salen al revés, prueba 180
 
     // Coordenadas donde la IA puede levantar edificios
     private List<Vector3> puntosDeAnclaje = new List<Vector3>();
@@ -67,6 +71,37 @@ public class IAEnemiga : MonoBehaviour
             Invoke("SpawnInicial", 1f);
             InvokeRepeating("TomarDecisionEstrategica", segundosEntreDecisiones, segundosEntreDecisiones);
         }
+    }
+
+    // ====================================================================
+    // REINICIO DEL COMANDANTE: vuelve al estado de arranque y re-lanza su ciclo.
+    // Lo llama el GestorPartida al reiniciar la partida.
+    // ====================================================================
+    public void ReiniciarComandante()
+    {
+        if (miBase == null) miBase = GetComponent<BaseMilitar>();
+
+        CancelInvoke(); // paramos los timers viejos (SpawnInicial y las decisiones)
+
+        // Volvemos al principio de la estrategia
+        faseActual = FaseEstrategia.Economia;
+        recolectoresActuales = 0;
+        planActual = 0;
+        miEjercito.Clear();
+
+        // Reseteamos el estado en tiempo de ejecución de cada entrada del plan
+        foreach (PlanEdificio p in planConstruccion)
+        {
+            p.edificioConstruido = null; // los viejos ya no existen
+            p.tropasReclutadas = 0;
+        }
+
+        // Liberamos todos los huecos de construcción (sus edificios fueron destruidos)
+        for (int i = 0; i < anclajesOcupados.Count; i++) anclajesOcupados[i] = false;
+
+        // Re-armamos el ciclo desde cero
+        Invoke("SpawnInicial", 1f);
+        InvokeRepeating("TomarDecisionEstrategica", segundosEntreDecisiones, segundosEntreDecisiones);
     }
 
     void SpawnInicial()
@@ -231,7 +266,13 @@ public class IAEnemiga : MonoBehaviour
             return null; // No quedan huecos libres
         }
 
-        GameObject edificioGO = Instantiate(prefabEdificio, punto, Quaternion.identity);
+        GameObject edificioGO = Instantiate(prefabEdificio, punto, CalcularRotacionEdificio(punto));
+
+        // Lo metemos en el contenedor dinámico para poder limpiarlo al reiniciar
+        if (GestorPartida.Instancia != null && GestorPartida.Instancia.contenedorDinamico != null)
+        {
+            edificioGO.transform.SetParent(GestorPartida.Instancia.contenedorDinamico, true);
+        }
 
         EdificioReclutamiento edificio = edificioGO.GetComponent<EdificioReclutamiento>();
         if (edificio != null)
@@ -240,6 +281,19 @@ public class IAEnemiga : MonoBehaviour
         }
 
         return edificio;
+    }
+
+    // Orienta el edificio mirando hacia su castillo. correccionGradosY ajusta el giro
+    // por si la puerta del modelo no está en el frente (+Z).
+    Quaternion CalcularRotacionEdificio(Vector3 posicionEdificio)
+    {
+        Vector3 direccion = transform.position - posicionEdificio; // hacia el castillo
+        direccion.y = 0f;
+
+        if (direccion.sqrMagnitude < 0.001f) return Quaternion.identity;
+
+        Quaternion mirarCastillo = Quaternion.LookRotation(direccion);
+        return mirarCastillo * Quaternion.Euler(0f, correccionGradosY, 0f);
     }
 
     BaseMilitar BuscarBaseEnemiga()
@@ -265,7 +319,7 @@ public class IAEnemiga : MonoBehaviour
 
     void GenerarAnclajesAleatorios()
     {
-        int intentosMaximos = 30;
+        int intentosMaximos = 60; // Más intentos: ahora rechazamos huecos con obstáculos
         int intentos = 0;
 
         while (puntosDeAnclaje.Count < cantidadEdificiosMaximos && intentos < intentosMaximos)
@@ -293,7 +347,11 @@ public class IAEnemiga : MonoBehaviour
                     }
                 }
 
-                if (espacioLibre)
+                // Además, el terreno debe estar despejado de árboles/rocas alrededor
+                Vector3 centroEsfera = hit.position + Vector3.up;
+                bool hayObstaculos = Physics.CheckSphere(centroEsfera, radioLibre, capaObstaculos);
+
+                if (espacioLibre && !hayObstaculos)
                 {
                     puntosDeAnclaje.Add(hit.position);
                     anclajesOcupados.Add(false);
