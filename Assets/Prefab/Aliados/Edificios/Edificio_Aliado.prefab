@@ -161,13 +161,10 @@ MonoBehaviour:
   barraSalud: {fileID: 0}
   puntoSpawn: {fileID: 5658263047682067279}
   costeBaseMejora: 50
+  "prefabLe\xF1ador": {fileID: 6471491849626687814, guid: eac07a27873f3f5468ecd61120fec54a, type: 3}
+  "costeLe\xF1ador": 10
   prefabCaballero: {fileID: 6471491849626687814, guid: 4c4e8a7dc9fc10f4389b8328944c650d, type: 3}
   costeCaballero: 10
-  prefabMinero: {fileID: 6471491849626687814, guid: 4d6f935a73473204fa3f7712192113ab, type: 3}
-  costeMinero: 20
-  prefabTesorero: {fileID: 6471491849626687814, guid: 8757937fa960259498a8da73bdff3aea, type: 3}
-  maderaTesorero: 20
-  piedraTesorero: 15
 --- !u!65 &-5560493559147127057
 BoxCollider:
   m_ObjectHideFlags: 0

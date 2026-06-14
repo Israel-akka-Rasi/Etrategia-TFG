@@ -1,0 +1,169 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2258207528318057223
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5321867446024573864}
+  m_Layer: 0
+  m_Name: PuntoSpawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5321867446024573864
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2258207528318057223}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0, z: 1.27}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5254009024613180320}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &5720490871095198795
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 0d9a31041fd0f9745bb4486aeafb2d97, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 587.08
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0d9a31041fd0f9745bb4486aeafb2d97, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0d9a31041fd0f9745bb4486aeafb2d97, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 48.99986
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0d9a31041fd0f9745bb4486aeafb2d97, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0d9a31041fd0f9745bb4486aeafb2d97, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.00000008146034
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0d9a31041fd0f9745bb4486aeafb2d97, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0d9a31041fd0f9745bb4486aeafb2d97, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0d9a31041fd0f9745bb4486aeafb2d97, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0d9a31041fd0f9745bb4486aeafb2d97, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0d9a31041fd0f9745bb4486aeafb2d97, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 0d9a31041fd0f9745bb4486aeafb2d97, type: 3}
+      propertyPath: m_Name
+      value: building_archeryrange_red
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 0d9a31041fd0f9745bb4486aeafb2d97, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5321867446024573864}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0d9a31041fd0f9745bb4486aeafb2d97, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6706028169947357872}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0d9a31041fd0f9745bb4486aeafb2d97, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 9118000986723174999}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0d9a31041fd0f9745bb4486aeafb2d97, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5389156223088096963}
+  m_SourcePrefab: {fileID: 100100000, guid: 0d9a31041fd0f9745bb4486aeafb2d97, type: 3}
+--- !u!1 &4873508265993156890 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 0d9a31041fd0f9745bb4486aeafb2d97, type: 3}
+  m_PrefabInstance: {fileID: 5720490871095198795}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &6706028169947357872
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4873508265993156890}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.670634, y: 1.7917347, z: 1.550816}
+  m_Center: {x: -0.035319924, y: 0.8958672, z: -0.0980584}
+--- !u!208 &9118000986723174999
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4873508265993156890}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 0.83500004, y: 0.896, z: 0.77500004}
+  m_MoveThreshold: 0.1
+  m_Carve: 1
+  m_CarveOnlyStationary: 1
+  m_Center: {x: -0.035, y: 0.896, z: -0.098000005}
+  m_TimeToStationary: 0.5
+--- !u!114 &5389156223088096963
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4873508265993156890}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01a7902d0aec8c04ebd8a6050d6fcfc6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EdificioReclutamiento
+  nombreEdificio: Galeria De Tiro
+  puntoSpawn: {fileID: 5321867446024573864}
+  equipo: 1
+  prefabTropa: {fileID: 8302275368063891483, guid: d78a414ecb55f21408feb78f61c715be, type: 3}
+  costeMadera: 20
+  costePiedra: 0
+  costeOro: 0
+  modoPrueba: 1
+--- !u!4 &5254009024613180320 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 0d9a31041fd0f9745bb4486aeafb2d97, type: 3}
+  m_PrefabInstance: {fileID: 5720490871095198795}
+  m_PrefabAsset: {fileID: 0}

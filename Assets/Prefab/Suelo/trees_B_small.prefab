@@ -52,6 +52,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: trees_B_small
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: eda99fa353486f04c9a26188ceecab50, type: 3}
+      propertyPath: m_TagString
+      value: Arbol
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -119,7 +123,7 @@ NavMeshObstacle:
   m_Shape: 1
   m_Extents: {x: 0.66400003, y: 0.46100003, z: 0.569}
   m_MoveThreshold: 0.1
-  m_Carve: 0
+  m_Carve: 1
   m_CarveOnlyStationary: 1
   m_Center: {x: 0.029000001, y: 0.45400003, z: 0.066}
   m_TimeToStationary: 0.5

@@ -100,3 +100,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f360416d79d5eb1478c777bcc7a09cb2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CasillaNiebla
+  modoPruebaSinNiebla: 1

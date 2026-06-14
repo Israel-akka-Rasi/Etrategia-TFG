@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.UI; 
+using UnityEngine.UI;
 using TMPro;
 using UnityEngine.EventSystems;
 
@@ -15,7 +15,7 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI txtOro;
 
     [Header("Panel de Selección")]
-    public GameObject panelSeleccion; 
+    public GameObject panelSeleccion;
     public TextMeshProUGUI txtNombreUnidad;
     public TextMeshProUGUI txtVidaUnidad;
     public TextMeshProUGUI txtAtaqueUnidad;
@@ -25,17 +25,13 @@ public class UIManager : MonoBehaviour
     public GameObject panelReclutamiento;
 
     [Header("Botones de Reclutamiento (Castillo)")]
+    // El castillo solo produce Leñador y Caballero.
+    public Button botonLeñador;
     public Button botonCaballero;
-    public Button botonMinero;
-    public Button botonTesorero;
-
-    [Header("Textos de Requisitos (Castillo)")]
-    public TMPro.TextMeshProUGUI textoRequisitoMinero;
-    public TMPro.TextMeshProUGUI textoRequisitoTesorero;
 
     [Header("Nuevos Paneles y Construcción")]
     public GameObject panelConstruccion;
-    public SistemaConstruccion sistemaConstruccion; 
+    public SistemaConstruccion sistemaConstruccion;
 
     [Header("Prefabs de Edificios")]
     public GameObject hologramaCampamentoMinero;
@@ -50,26 +46,29 @@ public class UIManager : MonoBehaviour
     [Header("Límites de Construcción")]
     public int limiteEdificios = 3;
     [Space(5)]
-    public Button botonConstruirCampamento; 
-    public TextMeshProUGUI textoLimiteCampamento; 
+    public Button botonConstruirCampamento;
+    public TextMeshProUGUI textoLimiteCampamento;
     [Space(5)]
     public Button botonConstruirGaleria;
-    public TextMeshProUGUI textoLimiteGaleria; 
+    public TextMeshProUGUI textoLimiteGaleria;
     [Space(5)]
     public Button botonConstruirGremio;
-    public TextMeshProUGUI textoLimiteGremio; 
+    public TextMeshProUGUI textoLimiteGremio;
     [Space(5)]
     public Button botonConstruirColiseo;
-    public TextMeshProUGUI textoLimiteColiseo; 
+    public TextMeshProUGUI textoLimiteColiseo;
 
     [Header("Menús de Edificios Seleccionados")]
-    public GameObject panelCampamentoMinero; 
+    public GameObject panelCampamentoMinero;
     public GameObject panelGaleriaTiro;
     public GameObject panelGremioComercial;
     public GameObject panelColiseo;
-    private EdificioReclutamiento edificioSeleccionado; 
+    private EdificioReclutamiento edificioSeleccionado;
 
     private Tropa tropaSeleccionada;
+
+    // Guardamos aquí el castillo del jugador para no buscarlo en cada clic de botón.
+    private BaseMilitar baseJugador;
 
     void Awake()
     {
@@ -97,6 +96,24 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    // --- Buscador cacheado de la base del jugador (Equipo 0) ---
+    private BaseMilitar ObtenerBaseJugador()
+    {
+        if (baseJugador == null)
+        {
+            BaseMilitar[] bases = FindObjectsOfType<BaseMilitar>();
+            foreach (BaseMilitar b in bases)
+            {
+                if (b.equipo == 0)
+                {
+                    baseJugador = b;
+                    break;
+                }
+            }
+        }
+        return baseJugador;
+    }
+
     public void ActualizarEconomia(int nivel, int popActual, int popMax, int madera, int piedra, int oro)
     {
         txtNivelCastillo.text = "Nivel: " + nivel;
@@ -108,46 +125,41 @@ public class UIManager : MonoBehaviour
 
     public void MostrarInfoTropa(Tropa tropa, int ataque)
     {
-        tropaSeleccionada = tropa; 
+        tropaSeleccionada = tropa;
         panelSeleccion.SetActive(true);
         txtNombreUnidad.text = tropa.gameObject.name.Replace("(Clone)", "");
         txtAtaqueUnidad.text = "Daño: " + ataque;
-        
+
         if (imgRetratoUnidad != null && tropa.retratoTropa != null)
         {
             imgRetratoUnidad.sprite = tropa.retratoTropa;
-            imgRetratoUnidad.color = Color.white; 
+            imgRetratoUnidad.color = Color.white;
         }
     }
 
     public void OcultarPanelSeleccion()
     {
-        tropaSeleccionada = null; 
-        panelSeleccion.SetActive(false); 
+        tropaSeleccionada = null;
+        panelSeleccion.SetActive(false);
     }
 
+    // --- BOTONES DEL CASTILLO ---
     public void BotonMejorarCastillo()
     {
-        BaseMilitar[] bases = FindObjectsOfType<BaseMilitar>();
-        foreach(BaseMilitar b in bases) { if(b.equipo == 0) { b.MejorarCastillo(); break; } }
+        BaseMilitar b = ObtenerBaseJugador();
+        if (b != null) b.MejorarCastillo();
+    }
+
+    public void BotonComprarLeñador()
+    {
+        BaseMilitar b = ObtenerBaseJugador();
+        if (b != null) b.ComprarLeñador();
     }
 
     public void BotonComprarCaballero()
     {
-        BaseMilitar[] bases = FindObjectsOfType<BaseMilitar>();
-        foreach (BaseMilitar b in bases) { if (b.equipo == 0) { b.ComprarCaballero(); return; } }
-    }
-
-    public void BotonComprarMinero()
-    {
-        BaseMilitar[] bases = FindObjectsOfType<BaseMilitar>();
-        foreach (BaseMilitar b in bases) { if (b.equipo == 0) { b.ComprarMinero(); break; } }
-    }
-
-    public void BotonComprarTesorero()
-    {
-        BaseMilitar[] bases = FindObjectsOfType<BaseMilitar>();
-        foreach (BaseMilitar b in bases) { if (b.equipo == 0) { b.ComprarTesorero(); break; } }
+        BaseMilitar b = ObtenerBaseJugador();
+        if (b != null) b.ComprarCaballero();
     }
 
     public void AbrirPanelConstruccion()
@@ -156,7 +168,7 @@ public class UIManager : MonoBehaviour
         if (panelConstruccion != null) panelConstruccion.SetActive(true);
 
         int contCampamentos = 0, contGalerias = 0, contGremios = 0, contColiseos = 0;
-        
+
         EdificioReclutamiento[] edificiosEnMapa = FindObjectsOfType<EdificioReclutamiento>();
         foreach (EdificioReclutamiento edificio in edificiosEnMapa)
         {
@@ -166,7 +178,7 @@ public class UIManager : MonoBehaviour
             else if (edificio.nombreEdificio == "Coliseo") contColiseos++;
         }
 
-        // MODO PRUEBA: Quitamos el nivel del castillo
+        // MODO PRUEBA: no comprobamos el nivel del castillo, solo el límite por tipo.
         ConfigurarBotonConstruccion(botonConstruirCampamento, textoLimiteCampamento, "Campamento", contCampamentos);
         ConfigurarBotonConstruccion(botonConstruirGaleria, textoLimiteGaleria, "Arquería", contGalerias);
         ConfigurarBotonConstruccion(botonConstruirGremio, textoLimiteGremio, "Gremio", contGremios);
@@ -178,14 +190,14 @@ public class UIManager : MonoBehaviour
         if (boton == null || texto == null) return;
 
         texto.text = $"{nombre} ({cantidad}/{limiteEdificios}) [TEST]";
-        texto.color = Color.yellow; 
-        boton.interactable = (cantidad < limiteEdificios); 
+        texto.color = Color.yellow;
+        boton.interactable = (cantidad < limiteEdificios);
     }
 
     public void CerrarPanelConstruccion()
     {
         if (panelConstruccion != null) panelConstruccion.SetActive(false);
-        if (panelReclutamiento != null) panelReclutamiento.SetActive(true); 
+        if (panelReclutamiento != null) panelReclutamiento.SetActive(true);
     }
 
     // --- MODO PRUEBA: EDIFICIOS GRATIS ---
@@ -246,7 +258,7 @@ public class UIManager : MonoBehaviour
         if (panelGaleriaTiro != null) panelGaleriaTiro.SetActive(false);
         if (panelGremioComercial != null) panelGremioComercial.SetActive(false);
         if (panelColiseo != null) panelColiseo.SetActive(false);
-        
+
         edificioSeleccionado = null;
     }
 
@@ -258,12 +270,8 @@ public class UIManager : MonoBehaviour
         panelReclutamiento.SetActive(mostrar);
         if (!mostrar) return;
 
-        botonCaballero.interactable = true;
-        
-        botonMinero.interactable = true;
-        if(textoRequisitoMinero != null) { textoRequisitoMinero.text = "Minero [TEST]"; textoRequisitoMinero.color = Color.yellow; }
-
-        botonTesorero.interactable = true;
-        if(textoRequisitoTesorero != null) { textoRequisitoTesorero.text = "Tesorero [TEST]"; textoRequisitoTesorero.color = Color.yellow; }
+        // Leñador y Caballero no tienen requisitos: siempre disponibles.
+        if (botonLeñador != null) botonLeñador.interactable = true;
+        if (botonCaballero != null) botonCaballero.interactable = true;
     }
 }

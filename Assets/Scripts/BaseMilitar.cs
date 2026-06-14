@@ -13,8 +13,8 @@ public class BaseMilitar : MonoBehaviour
     public int oro = 0;
 
     [Header("Gestión de Población")]
-    public int poblacionActual = 1; 
-    public int poblacionMaxima = 5; 
+    public int poblacionActual = 1; // Empezamos en 1 por el Leñador inicial gratis
+    public int poblacionMaxima = 5;
 
     [Header("Combate y Spawn")]
     public float salud = 1000f;
@@ -25,29 +25,32 @@ public class BaseMilitar : MonoBehaviour
     [Header("Evolución")]
     public int costeBaseMejora = 50; // Madera base para subir niveles
 
-    [Header("Reclutamiento de Tropas")]
-    public GameObject prefabCaballero;
-    public int costeCaballero = 10; // Madera
-    
-    public GameObject prefabMinero;
-    public int costeMinero = 20; // Madera
+    // ====================================================================
+    // RECLUTAMIENTO DESDE EL CASTILLO
+    // El castillo SOLO produce estas dos unidades. El resto (Minero, Arquero,
+    // Recolector de Oro, Gladiador) salen de sus edificios (EdificioReclutamiento).
+    // Esto vale igual para el jugador (equipo 0) y para la IA (equipo 1):
+    // cada base asigna en el Inspector los prefabs de SU bando.
+    // ====================================================================
+    [Header("Reclutamiento del Castillo")]
+    public GameObject prefabLeñador; // Recolector de madera (jugador: Recolector / IA: RecolectorIA)
+    public int costeLeñador = 10;    // Madera
 
-    public GameObject prefabTesorero;
-    public int maderaTesorero = 20;
-    public int piedraTesorero = 15; 
+    public GameObject prefabCaballero; // Unidad de combate básica
+    public int costeCaballero = 10;    // Madera
 
     void Start()
     {
         saludMaxima = salud;
-        
-        // --- TROPA INICIAL GRATIS ---
-        // Instanciamos el primer caballero directamente en el punto de spawn
-        if (prefabCaballero != null && puntoSpawn != null)
+
+        // --- TROPA INICIAL GRATIS: un Leñador ---
+        // No tocamos población porque ya arrancamos en 1 contando con él.
+        if (prefabLeñador != null && puntoSpawn != null)
         {
-            Instantiate(prefabCaballero, puntoSpawn.position + (puntoSpawn.forward * 1.5f), Quaternion.identity);
+            GameObject leñadorInicial = SpawnUtils.SpawnConDesplazamiento(prefabLeñador, puntoSpawn, 1.5f);
+            AsignarBaseSiEsRecolector(leñadorInicial);
         }
-        
-        // Actualizamos la UI al arrancar
+
         ActualizarTextosUI();
     }
 
@@ -79,16 +82,16 @@ public class BaseMilitar : MonoBehaviour
         int piedraNecesaria = 0;
         int oroNecesario = 0;
 
-        if (nivelCastillo < 5) 
+        if (nivelCastillo < 5)
         {
             maderaNecesaria = costeBaseMejora * nivelCastillo;
         }
-        else if (nivelCastillo < 10) 
+        else if (nivelCastillo < 10)
         {
             maderaNecesaria = costeBaseMejora * nivelCastillo;
-            piedraNecesaria = 20 * (nivelCastillo - 4); 
+            piedraNecesaria = 20 * (nivelCastillo - 4);
         }
-        else 
+        else
         {
             piedraNecesaria = 50;
             oroNecesario = 10 * (nivelCastillo - 10);
@@ -99,9 +102,9 @@ public class BaseMilitar : MonoBehaviour
             madera -= maderaNecesaria;
             piedra -= piedraNecesaria;
             oro -= oroNecesario;
-            
+
             nivelCastillo++;
-            poblacionMaxima += 2; 
+            poblacionMaxima += 2;
 
             Debug.Log($"Mejorado a Nivel {nivelCastillo}. Costó: M:{maderaNecesaria} P:{piedraNecesaria} O:{oroNecesario}");
 
@@ -118,12 +121,7 @@ public class BaseMilitar : MonoBehaviour
     {
         if (UIManager.Instancia != null && UIManager.Instancia.panelReclutamiento != null)
         {
-            // 1. Miramos si el panel está encendido (visible) en la pantalla
-            bool estaAbierto = UIManager.Instancia.panelReclutamiento.activeSelf;
-
-            // 2. Si ya estaba abierto, lo refrescamos para desbloquear botones. 
-            // Si estaba cerrado, lo dejamos en paz.
-            if (estaAbierto)
+            if (UIManager.Instancia.panelReclutamiento.activeSelf)
             {
                 UIManager.Instancia.MostrarPanelReclutamiento(true, nivelCastillo);
             }
@@ -134,8 +132,8 @@ public class BaseMilitar : MonoBehaviour
     public void RecibirDano(int cantidad)
     {
         salud -= cantidad;
-        
-        if (barraSalud != null) 
+
+        if (barraSalud != null)
         {
             barraSalud.fillAmount = salud / saludMaxima;
         }
@@ -145,72 +143,54 @@ public class BaseMilitar : MonoBehaviour
             GameManager gestor = FindObjectOfType<GameManager>();
             if (gestor != null)
             {
-                gestor.TerminarPartida(equipo); 
+                gestor.TerminarPartida(equipo);
             }
             Destroy(gameObject);
         }
     }
 
-    // --- RECLUTAMIENTO ---
-    public void ComprarCaballero()
+    // ====================================================================
+    // MÉTODO GENÉRICO DE RECLUTAMIENTO
+    // Comprueba población y recursos, cobra, spawnea y ASIGNA esta base a la
+    // tropa creada (clave cuando hay varias bases del mismo bando).
+    // Devuelve la tropa creada (o null si no se pudo).
+    // ====================================================================
+    public GameObject Reclutar(GameObject prefab, int costeM, int costeP = 0, int costeO = 0)
     {
-        if (poblacionActual >= poblacionMaxima) return;
+        if (prefab == null) return null;
+        if (poblacionActual >= poblacionMaxima) return null;
 
-        //if (madera >= costeCaballero)
-        //{
-        //    madera -= costeCaballero;
-            poblacionActual++;
-            RealizarSpawnConDesplazamiento(prefabCaballero);
-            ActualizarTextosUI();
-        //}
+        if (madera < costeM || piedra < costeP || oro < costeO) return null;
+
+        madera -= costeM;
+        piedra -= costeP;
+        oro -= costeO;
+        poblacionActual++;
+
+        GameObject nuevaTropa = SpawnUtils.SpawnConDesplazamiento(prefab, puntoSpawn);
+        AsignarBaseSiEsRecolector(nuevaTropa);
+        ActualizarTextosUI();
+        return nuevaTropa;
     }
 
-    public void ComprarMinero()
+    // Si la tropa recién creada es un recolector autónomo (IA), le decimos
+    // que esta es su base, para que entregue aquí y no en otra base roja.
+    private void AsignarBaseSiEsRecolector(GameObject tropa)
     {
-        //if (nivelCastillo < 5) return;
-        if (poblacionActual >= poblacionMaxima) return;
+        if (tropa == null) return;
 
-        //if (madera >= costeMinero)
-        //{
-            //madera -= costeMinero;
-            poblacionActual++;
-            RealizarSpawnConDesplazamiento(prefabMinero);
-            ActualizarTextosUI();
-        //}
+        RecolectorIA recolectorIA = tropa.GetComponent<RecolectorIA>();
+        if (recolectorIA != null) recolectorIA.AsignarBase(this);
     }
 
-    public void ComprarTesorero()
+    // --- Atajos para las dos unidades del castillo ---
+    public GameObject ComprarLeñador()
     {
-        //if (nivelCastillo < 10) return;
-        if (poblacionActual >= poblacionMaxima) return;
-
-       // if (madera >= maderaTesorero && piedra >= piedraTesorero)
-       // {
-        //    madera -= maderaTesorero;
-        //    piedra -= piedraTesorero;
-            poblacionActual++;
-            RealizarSpawnConDesplazamiento(prefabTesorero);
-            ActualizarTextosUI();
-        //}
-        //else
-        //{
-           // Debug.Log("Faltan recursos para el Tesorero.");
-        //}
+        return Reclutar(prefabLeñador, costeLeñador);
     }
 
-    // Función unificada para no repetir código visual al comprar tropas
-    private void RealizarSpawnConDesplazamiento(GameObject prefabUnidad)
+    public GameObject ComprarCaballero()
     {
-        Vector3 variacion = new Vector3(Random.Range(-0.8f, 0.8f), 0, Random.Range(-0.8f, 0.8f));
-        Vector3 posicionFinal = puntoSpawn.position + variacion;
-
-        GameObject nuevaTropa = Instantiate(prefabUnidad, posicionFinal, Quaternion.identity);
-
-        Tropa scriptTropa = nuevaTropa.GetComponent<Tropa>();
-        if (scriptTropa != null)
-        {
-            Vector3 puntoDespeje = puntoSpawn.position + (puntoSpawn.forward * 1.0f) + (variacion * 0.5f);
-            scriptTropa.OrdenarMovimiento(puntoDespeje);
-        }
+        return Reclutar(prefabCaballero, costeCaballero);
     }
 }

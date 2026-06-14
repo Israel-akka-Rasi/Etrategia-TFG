@@ -1,0 +1,249 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &6697590464085836675
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7116432077809340974}
+  m_Layer: 3
+  m_Name: PuntoSpawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7116432077809340974
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6697590464085836675}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0, z: 1.67}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4565320785486759960}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &4094333282611113971
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 584.4251
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 48.99986
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.00000008146034
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+      propertyPath: m_Name
+      value: CastilloEnemigo
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+      propertyPath: m_TagString
+      value: BaseRoja
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7116432077809340974}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1825382912935123150}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2482414777835040465}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4318329885324288829}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 974678997268859173}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2258492259708678818}
+  m_SourcePrefab: {fileID: 100100000, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+--- !u!1 &3751665324954817186 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+  m_PrefabInstance: {fileID: 4094333282611113971}
+  m_PrefabAsset: {fileID: 0}
+--- !u!64 &1825382912935123150
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3751665324954817186}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 6928015683339083857, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+--- !u!114 &2482414777835040465
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3751665324954817186}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c78f9129ff432647b7d9a235216beae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BaseMilitar
+  equipo: 1
+  nivelCastillo: 1
+  madera: 30
+  piedra: 0
+  oro: 0
+  poblacionActual: 1
+  poblacionMaxima: 30
+  salud: 1000
+  barraSalud: {fileID: 0}
+  puntoSpawn: {fileID: 7116432077809340974}
+  costeBaseMejora: 50
+  "prefabLe\xF1ador": {fileID: 8302275368063891483, guid: e2ab2b5e591bdcc4b8b7aed2ff203e4e, type: 3}
+  "costeLe\xF1ador": 10
+  prefabCaballero: {fileID: 8302275368063891483, guid: 84fd45dbf41fee34fa847ca74e702cf6, type: 3}
+  costeCaballero: 10
+--- !u!65 &4318329885324288829
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3751665324954817186}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.9754133, y: 3.9792058, z: 2.2562542}
+  m_Center: {x: 0.000000029802322, y: 1.9896027, z: -0.00000017881393}
+--- !u!208 &974678997268859173
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3751665324954817186}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 0.98800004, y: 1.9900001, z: 1.128}
+  m_MoveThreshold: 0.1
+  m_Carve: 1
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 1.9900001, z: 0}
+  m_TimeToStationary: 0.5
+--- !u!114 &2258492259708678818
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3751665324954817186}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2af0376aae415f249a21c91a103643ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::IAEnemiga
+  faseActual: 0
+  limiteRecolectores: 2
+  limiteEjercito: 3
+  planConstruccion:
+  - nombre: Minero
+    prefabEdificio: {fileID: 7463210280705011798, guid: b717fd0aa2450e74e86521635bd32b71, type: 3}
+    tropasAReclutar: 3
+    tropasSonMilitares: 0
+  - nombre: Arqueros
+    prefabEdificio: {fileID: 7463210280705011798, guid: b717fd0aa2450e74e86521635bd32b71, type: 3}
+    tropasAReclutar: 3
+    tropasSonMilitares: 1
+  - nombre: Tesoreros
+    prefabEdificio: {fileID: 91207977346276211, guid: 48f767a21cd7f844f8176fec594b07ea, type: 3}
+    tropasAReclutar: 3
+    tropasSonMilitares: 0
+  - nombre: Gladiadores
+    prefabEdificio: {fileID: 6088895961117913311, guid: d78c9823b69c35e4db5edce32e963c96, type: 3}
+    tropasAReclutar: 3
+    tropasSonMilitares: 1
+  segundosEntreDecisiones: 3
+  radioConstruccionMin: 3
+  radioConstruccion: 10
+  cantidadEdificiosMaximos: 6
+  distanciaEntreEdificios: 5
+--- !u!4 &4565320785486759960 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 84eace0e66a699941875a98fdc27e581, type: 3}
+  m_PrefabInstance: {fileID: 4094333282611113971}
+  m_PrefabAsset: {fileID: 0}

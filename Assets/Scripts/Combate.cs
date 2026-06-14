@@ -12,7 +12,8 @@ public class Combate : MonoBehaviour
     public float radioVision = 5f;
 
     private float temporizador;
-    private Transform objetivo; 
+    private Transform objetivo;        // Objetivo INMEDIATO (a quién golpeo ahora mismo)
+    private Transform objetivoFinal;   // Objetivo FINAL del asedio (el castillo). Si es null, no hay asedio.
     private NavMeshAgent agente;
     private Tropa miTropa;
 
@@ -24,34 +25,52 @@ public class Combate : MonoBehaviour
 
     void Update()
     {
-        // --- 1. EL SEGURO ANTIBUGS DEFINITIVO ---
-        // Si no tenemos objetivo (o el objetivo acaba de morir y Unity lo ha destruido)
+        // --- 1. SIN OBJETIVO INMEDIATO ---
         if (objetivo == null)
         {
-            // ¡Quitamos el freno de mano si estaba puesto!
             if (agente != null && agente.isOnNavMesh && agente.isStopped)
             {
-                agente.isStopped = false; 
+                agente.isStopped = false;
             }
-            
-            // Como estamos libres, activamos el radar para buscar pelea
-            BuscarEnemigosCercanos();
-            return; // Cortamos aquí para que no ejecute el resto
-        }
 
-        // Si el objetivo existe pero ha sido ocultado/desactivado por algún motivo
-        if (!objetivo.gameObject.activeInHierarchy)
-        {
-            CancelarAtaque();
+            if (objetivoFinal != null)
+            {
+                // Estamos en ASEDIO. Antes de seguir hacia el castillo, miramos si
+                // hay una tropa enemiga cerca que limpiar. Si no, retomamos la marcha.
+                Transform intruso = BuscarTropaEnemigaCercana();
+                objetivo = (intruso != null) ? intruso : objetivoFinal;
+            }
+            else
+            {
+                // No hay asedio: estamos ociosos, así que defendemos buscando pelea cercana.
+                BuscarEnemigosCercanos();
+            }
             return;
         }
 
-        // --- 2. LÓGICA DE COMBATE ---
+        // --- 2. EL OBJETIVO DESAPARECIÓ (desactivado, no destruido) ---
+        if (!objetivo.gameObject.activeInHierarchy)
+        {
+            objetivo = null; // Dejamos que el bloque de arriba reanude/intercepte el próximo frame
+            if (agente != null && agente.isOnNavMesh) agente.isStopped = false;
+            return;
+        }
+
+        // --- 3. INTERCEPCIÓN DURANTE EL ASEDIO ---
+        // Si vamos directos al castillo (objetivo == objetivoFinal) y aparece una tropa
+        // enemiga dentro de la vista, la atacamos primero para asegurar la zona.
+        if (objetivoFinal != null && objetivo == objetivoFinal)
+        {
+            Transform intruso = BuscarTropaEnemigaCercana();
+            if (intruso != null) objetivo = intruso;
+        }
+
+        // --- 4. LÓGICA DE COMBATE ---
         float distancia = Vector3.Distance(transform.position, objetivo.position);
 
         if (distancia <= rangoAtaque)
         {
-            agente.isStopped = true; // Ponemos el freno de mano para golpear firmemente
+            agente.isStopped = true; // Freno de mano para golpear firme
             temporizador += Time.deltaTime;
 
             if (temporizador >= tiempoEntreAtaques)
@@ -62,8 +81,8 @@ public class Combate : MonoBehaviour
         }
         else
         {
-            agente.isStopped = false; // Quitamos el freno para poder perseguir
-            agente.SetDestination(objetivo.position); 
+            agente.isStopped = false; // Soltamos el freno para perseguir
+            agente.SetDestination(objetivo.position);
         }
     }
 
@@ -73,7 +92,7 @@ public class Combate : MonoBehaviour
         if (tropaEnemiga != null)
         {
             tropaEnemiga.RecibirDano(dano, miTropa);
-            return; 
+            return;
         }
 
         BaseMilitar baseEnemiga = objetivo.GetComponent<BaseMilitar>();
@@ -84,6 +103,7 @@ public class Combate : MonoBehaviour
         }
     }
 
+    // Busca cualquier enemigo (tropa o base) y lo fija. Se usa para la defensa cuando estamos ociosos.
     void BuscarEnemigosCercanos()
     {
         Collider[] detectados = Physics.OverlapSphere(transform.position, radioVision);
@@ -105,10 +125,36 @@ public class Combate : MonoBehaviour
         }
     }
 
+    // Devuelve SOLO la tropa enemiga más cercana dentro de la vista (o null). Para interceptar en el asedio.
+    Transform BuscarTropaEnemigaCercana()
+    {
+        Collider[] detectados = Physics.OverlapSphere(transform.position, radioVision);
+        Transform masCercana = null;
+        float distanciaMinima = Mathf.Infinity;
+
+        foreach (Collider col in detectados)
+        {
+            Tropa t = col.GetComponent<Tropa>();
+            if (t != null && t.equipo != miTropa.equipo)
+            {
+                float d = Vector3.Distance(transform.position, t.transform.position);
+                if (d < distanciaMinima)
+                {
+                    distanciaMinima = d;
+                    masCercana = t.transform;
+                }
+            }
+        }
+
+        return masCercana;
+    }
+
+    // --- ATAQUE PRECISO (clic del jugador o contraataque): ataca SOLO a ese objetivo ---
     public void OrdenarAtaque(Transform nuevoObjetivo)
     {
         objetivo = nuevoObjetivo;
-        temporizador = tiempoEntreAtaques; // Así el primer golpe lo da nada más llegar
+        objetivoFinal = null; // sin asedio: no intercepta a terceros
+        temporizador = tiempoEntreAtaques; // primer golpe nada más llegar
     }
 
     public void OrdenarAtaque(Tropa tropaObjetivo)
@@ -116,19 +162,32 @@ public class Combate : MonoBehaviour
         OrdenarAtaque(tropaObjetivo.transform);
     }
 
+    // --- ASEDIO (la IA): va directo al castillo pero interceptando enemigos por el camino ---
+    public void OrdenarAsedio(Transform castilloEnemigo)
+    {
+        objetivoFinal = castilloEnemigo;
+        objetivo = castilloEnemigo;
+        temporizador = tiempoEntreAtaques;
+    }
+
     public bool TieneObjetivo()
     {
         return objetivo != null;
     }
-    
+
+    public bool EstaAsediando()
+    {
+        return objetivoFinal != null;
+    }
+
     public void CancelarAtaque()
     {
         objetivo = null;
-        
-        // Al cancelar, aseguramos que el motor vuelva a encenderse
+        objetivoFinal = null;
+
         if (agente != null && agente.isOnNavMesh)
         {
-            agente.isStopped = false; 
+            agente.isStopped = false;
         }
     }
 }
