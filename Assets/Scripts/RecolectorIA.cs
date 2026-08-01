@@ -80,6 +80,37 @@ public class RecolectorIA : MonoBehaviour
         }
     }
 
+    // --- Detección de atasco ---
+    // Si el punto de destino no es del todo alcanzable, el agente se queda
+    // oscilando de lado a lado indefinidamente. Si detectamos que no avanza,
+    // lo desatascamos y le buscamos otro objetivo.
+    private float remanenteAnterior = Mathf.Infinity;
+    private float tiempoSinAvanzar = 0f;
+    private const float SEGUNDOS_PARA_ATASCO = 2.5f;
+
+    void ReiniciarMedidorAtasco()
+    {
+        remanenteAnterior = Mathf.Infinity;
+        tiempoSinAvanzar = 0f;
+    }
+
+    // Devuelve true si lleva demasiado tiempo sin acercarse a su destino
+    bool EstaAtascado()
+    {
+        if (agente == null || !agente.isOnNavMesh) return false;
+        if (agente.pathPending || !agente.hasPath) return false;
+
+        if (agente.remainingDistance < remanenteAnterior - 0.05f)
+        {
+            remanenteAnterior = agente.remainingDistance;
+            tiempoSinAvanzar = 0f;
+            return false;
+        }
+
+        tiempoSinAvanzar += Time.deltaTime;
+        return tiempoSinAvanzar > SEGUNDOS_PARA_ATASCO;
+    }
+
     void Update()
     {
         switch (estadoActual)
@@ -151,12 +182,36 @@ public class RecolectorIA : MonoBehaviour
 
         if (!agente.pathPending && agente.remainingDistance <= agente.stoppingDistance)
         {
+            ReiniciarMedidorAtasco();
+
             if (siguienteEstado == EstadoRecolector.Trabajando)
             {
                 StartCoroutine(ProcesoRecoleccion());
             }
             else // Ha llegado a la base
             {
+                EntregarRecursos();
+            }
+            return;
+        }
+
+        // No ha llegado: ¿está avanzando o se ha quedado bailando en el sitio?
+        if (EstaAtascado())
+        {
+            agente.ResetPath();
+            ReiniciarMedidorAtasco();
+
+            if (siguienteEstado == EstadoRecolector.Trabajando)
+            {
+                // El árbol/mina es inaccesible: descartamos y buscamos otro
+                Debug.Log(gameObject.name + ": no puedo llegar al recurso, busco otro.");
+                objetivoActual = null;
+                estadoActual = EstadoRecolector.Buscando;
+            }
+            else
+            {
+                // No puede volver a la base: damos la entrega por hecha para no bloquearse
+                Debug.Log(gameObject.name + ": no puedo volver a la base, reintento.");
                 EntregarRecursos();
             }
         }

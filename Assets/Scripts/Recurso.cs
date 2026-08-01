@@ -6,7 +6,7 @@ public class Recurso : MonoBehaviour
 
     [Header("Configuración")]
     public TipoRecurso tipo;
-    public int reservaHabilitada = 100; // Cuánto tiene el nodo antes de agotarse
+    public int reservaHabilitada = 50; // Árbol 50 | Mina piedra 120 | Mina oro 60
     public int cantidadPorTanda = 2;    // Cuánto extrae el trabajador en cada golpe
 
     // Estado inicial y referencias para poder ocultar/restaurar el nodo

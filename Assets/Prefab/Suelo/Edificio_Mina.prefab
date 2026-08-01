@@ -92,8 +92,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Recurso
   tipo: 2
-  reservaHabilitada: 100
-  cantidadPorTanda: 2
+  reservaHabilitada: 60
+  cantidadPorTanda: 1
 --- !u!208 &7750985773932157206
 NavMeshObstacle:
   m_ObjectHideFlags: 0

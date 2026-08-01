@@ -8,29 +8,27 @@ public class BaseMilitar : MonoBehaviour
     public int nivelCastillo = 1; // 15 es el máximo
 
     [Header("Bóveda de Recursos")]
-    public int madera = 0;
+    public int madera = 40; // Arranque: da para 2-3 leñadores de salida
     public int piedra = 0;
     public int oro = 0;
 
     [Header("Gestión de Población")]
     public int poblacionActual = 1; // Empezamos en 1 por el Leñador inicial gratis
-    public int poblacionMaxima = 5;
+    public int poblacionMaxima = 8;
+    public int poblacionPorNivel = 2; // Cuánta población da cada mejora de castillo
 
     [Header("Combate y Spawn")]
-    public float salud = 1000f;
+    public float salud = 2000f; // ~22s de asedio con un ejército completo
     private float saludMaxima;
     public Image barraSalud;
     public Transform puntoSpawn;
-
-    [Header("Evolución")]
-    public int costeBaseMejora = 50; // Madera base para subir niveles
 
     [Header("Reclutamiento del Castillo")]
     public GameObject prefabLeñador; // Recolector de madera (jugador: Recolector / IA: RecolectorIA)
     public int costeLeñador = 10;    // Madera
 
     public GameObject prefabCaballero; // Unidad de combate básica
-    public int costeCaballero = 10;    // Madera
+    public int costeCaballero = 12;    // Madera
 
     // --- Estado inicial guardado, para poder restaurarlo al reiniciar el episodio ---
     private int maderaInicial, piedraInicial, oroInicial;
@@ -83,6 +81,15 @@ public class BaseMilitar : MonoBehaviour
         ActualizarTextosUI();
     }
 
+    // --- GESTIÓN DE POBLACIÓN ---
+    // Liberar hueco cuando muere una unidad. Sin esto, el contador solo sube
+    // y al llegar al tope ya no se puede reclutar nunca más.
+    public void LiberarPoblacion(int cantidad = 1)
+    {
+        poblacionActual = Mathf.Max(0, poblacionActual - cantidad);
+        ActualizarTextosUI();
+    }
+
     // --- RECOLECCIÓN DEL MAPA ---
     public void RecibirRecurso(string tipo, int cantidad)
     {
@@ -102,29 +109,53 @@ public class BaseMilitar : MonoBehaviour
         }
     }
 
+    [Header("Evolución")]
+    public int nivelMaximo = 6;          // Último nivel alcanzable (5 desbloquea el Coliseo)
+    public int costeBaseMejora = 50;     // Madera:  base * nivel
+    public int costePiedraMejora = 15;   // Piedra:  15 * (nivel-1), desde nivel 2
+    public int costeOroMejora = 10;      // Oro:     10 * (nivel-3), desde nivel 4
+
+    // --- COSTE DE LA SIGUIENTE MEJORA ---
+    // Cada nivel pide justo los recursos que te desbloqueó el nivel anterior:
+    // nivel 2 da Campamento (piedra) y nivel 4 da Gremio (oro).
+    // Se puede consultar sin ejecutar la mejora (lo usa la interfaz para mostrarlo).
+    public void CosteSiguienteNivel(out int maderaNecesaria, out int piedraNecesaria, out int oroNecesario)
+    {
+        maderaNecesaria = 0;
+        piedraNecesaria = 0;
+        oroNecesario = 0;
+
+        if (nivelCastillo >= nivelMaximo) return; // Nivel máximo: no hay siguiente
+
+        // Madera: siempre, y creciente
+        maderaNecesaria = costeBaseMejora * nivelCastillo;
+
+        // Piedra: a partir del nivel 2 (ya tienes Campamento Minero)
+        if (nivelCastillo >= 2)
+            piedraNecesaria = costePiedraMejora * (nivelCastillo - 1);
+
+        // Oro: a partir del nivel 4 (ya tienes Gremio Comercial)
+        if (nivelCastillo >= 4)
+            oroNecesario = costeOroMejora * (nivelCastillo - 3);
+    }
+
+    // ¿Puede permitirse ahora mismo la siguiente mejora?
+    public bool PuedeMejorar()
+    {
+        if (nivelCastillo >= nivelMaximo) return false;
+
+        int m, p, o;
+        CosteSiguienteNivel(out m, out p, out o);
+        return madera >= m && piedra >= p && oro >= o;
+    }
+
     // --- LÓGICA DE MEJORA ---
     public void MejorarCastillo()
     {
-        if (nivelCastillo >= 15) return;
+        if (nivelCastillo >= nivelMaximo) return;
 
-        int maderaNecesaria = 0;
-        int piedraNecesaria = 0;
-        int oroNecesario = 0;
-
-        if (nivelCastillo < 5)
-        {
-            maderaNecesaria = costeBaseMejora * nivelCastillo;
-        }
-        else if (nivelCastillo < 10)
-        {
-            maderaNecesaria = costeBaseMejora * nivelCastillo;
-            piedraNecesaria = 20 * (nivelCastillo - 4);
-        }
-        else
-        {
-            piedraNecesaria = 50;
-            oroNecesario = 10 * (nivelCastillo - 10);
-        }
+        int maderaNecesaria, piedraNecesaria, oroNecesario;
+        CosteSiguienteNivel(out maderaNecesaria, out piedraNecesaria, out oroNecesario);
 
         if (madera >= maderaNecesaria && piedra >= piedraNecesaria && oro >= oroNecesario)
         {
@@ -133,9 +164,10 @@ public class BaseMilitar : MonoBehaviour
             oro -= oroNecesario;
 
             nivelCastillo++;
-            poblacionMaxima += 2;
+            poblacionMaxima += poblacionPorNivel;
 
-            Debug.Log($"Mejorado a Nivel {nivelCastillo}. Costó: M:{maderaNecesaria} P:{piedraNecesaria} O:{oroNecesario}");
+            string quien = (equipo == 0) ? "EL JUGADOR" : "EL ENEMIGO";
+            Debug.Log($"{quien} ha subido a Nivel {nivelCastillo} (pob. máx: {poblacionMaxima}). Costó: M:{maderaNecesaria} P:{piedraNecesaria} O:{oroNecesario}");
 
             if (equipo == 0) ActualizarInterfazAlMejorar();
             ActualizarTextosUI();

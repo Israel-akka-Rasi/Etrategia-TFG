@@ -81,7 +81,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 0d9a31041fd0f9745bb4486aeafb2d97, type: 3}
       propertyPath: m_Name
-      value: building_archeryrange_red
+      value: Edificio_Arquero_Enemigo
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -156,12 +156,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EdificioReclutamiento
   nombreEdificio: Galeria De Tiro
   puntoSpawn: {fileID: 5321867446024573864}
-  equipo: 1
+  equipo: 0
+  nivelRequerido: 3
+  costeConstruccionMadera: 60
+  costeConstruccionPiedra: 15
+  costeConstruccionOro: 0
   prefabTropa: {fileID: 8302275368063891483, guid: d78a414ecb55f21408feb78f61c715be, type: 3}
   costeMadera: 20
-  costePiedra: 0
+  costePiedra: 5
   costeOro: 0
-  modoPrueba: 1
+  modoPrueba: 0
 --- !u!4 &5254009024613180320 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 0d9a31041fd0f9745bb4486aeafb2d97, type: 3}

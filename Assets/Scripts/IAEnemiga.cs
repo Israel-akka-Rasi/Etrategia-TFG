@@ -6,7 +6,16 @@ public enum FaseEstrategia
     Economia,
     Construccion,
     PreparacionMilitar,
+    Expedicion,
     Asedio
+}
+
+// Dónde se coloca cada tipo de tropa en la formación de asalto.
+public enum RolFormacion
+{
+    Frente,      // Delante (p. ej. gladiadores)
+    Centro,      // En medio (p. ej. caballeros)
+    Retaguardia  // Detrás (p. ej. arqueros)
 }
 
 // Cada entrada describe UN edificio que la IA construirá y cuántas tropas sacará de él.
@@ -18,10 +27,30 @@ public class PlanEdificio
     public GameObject prefabEdificio;          // El prefab del edificio a construir
     public int tropasAReclutar = 2;            // Cuántas unidades saca de él
     public bool tropasSonMilitares = false;    // true = se unen al ejército de asedio; false = economía
+    public RolFormacion rolFormacion = RolFormacion.Frente; // Dónde van sus tropas en el asalto (si son militares)
 
     // --- Estado en tiempo de ejecución (no se toca en el Inspector) ---
     [System.NonSerialized] public EdificioReclutamiento edificioConstruido;
-    [System.NonSerialized] public int tropasReclutadas;
+
+    // Tropas VIVAS salidas de este edificio. Si mueren, salen de la lista y se reponen.
+    [System.NonSerialized] public List<GameObject> tropasVivas = new List<GameObject>();
+    // Máximo que llegó a tener: solo reponemos hasta aquí, para no adelantar fases.
+    [System.NonSerialized] public int pico;
+
+    // Cuenta las que siguen vivas, limpiando de paso las que Unity ya destruyó
+    public int Vivas()
+    {
+        if (tropasVivas == null) tropasVivas = new List<GameObject>();
+        tropasVivas.RemoveAll(t => t == null);
+        return tropasVivas.Count;
+    }
+
+    public void Registrar(GameObject tropa)
+    {
+        if (tropasVivas == null) tropasVivas = new List<GameObject>();
+        tropasVivas.Add(tropa);
+        if (tropasVivas.Count > pico) pico = tropasVivas.Count;
+    }
 }
 
 public class IAEnemiga : MonoBehaviour
@@ -33,14 +62,67 @@ public class IAEnemiga : MonoBehaviour
 
     [Header("Condiciones de Cambio de Fase")]
     public int limiteRecolectores = 4; // Leñadores antes de empezar a construir
-    public int limiteEjercito = 5;     // Caballeros (del castillo) antes de atacar
+    public int cantidadCaballeros = 4; // Caballeros (básicos, del castillo) que forman la base del ejército
 
     [Header("Plan de Construcción")]
     // El orden de la lista es el orden en que los construye (de arriba a abajo).
     public List<PlanEdificio> planConstruccion = new List<PlanEdificio>();
 
+    [Header("Reacción: Defensa de la Base")]
+    // Si detecta enemigos cerca de casa, abandona lo que esté haciendo y vuelve a defender.
+    public bool defenderLaBase = true;
+    public float radioDefensaBase = 22f;   // Qué se considera "estar en mi territorio"
+    public float radioLlamadaTropas = 60f; // Desde cuán lejos vuelven las tropas a defender
+
+    [Header("Reacción: Retirada")]
+    // Si pierde buena parte del ejército durante el asalto, se retira y rehace fuerzas
+    // en vez de seguir mandando soldados a morir de uno en uno.
+    public bool retirarseSiPierde = true;
+    [Range(0f, 1f)] public float umbralRetirada = 0.4f; // % del ejército por debajo del cual se retira
+
+    [Header("Variabilidad (para que no juegue siempre igual)")]
+    // Pequeñas variaciones aleatorias por partida: hacen al rival menos predecible
+    // y evitan que el agente aprenda a explotar UNA secuencia exacta.
+    public bool comportamientoVariable = true;
+    public int variacionExpediciones = 1;      // ± expediciones
+    public int variacionTropasAtacar = 1;      // ± tropas mínimas para atacar
+    [Range(0f, 0.5f)] public float variacionRitmo = 0.2f; // ± % en el tiempo entre decisiones
+
+    [Header("Anti-bloqueo (¡clave para el entrenamiento!)")]
+    // Si una fase se atasca (sin recursos, sin hueco, sin poder construir...),
+    // la IA avanza igualmente en vez de quedarse esperando para siempre.
+    public int ciclosMaximosPorFase = 20;
+    // Pase lo que pase, a partir de este momento ataca con lo que tenga.
+    // Garantiza que la partida SIEMPRE se resuelve y nunca hay tablas eternas.
+    public float segundosHastaAtaqueForzoso = 240f;
+
+    [Header("Dificultad (0 = igualdad total con el jugador)")]
+    // Palanca única para calibrar al rival durante el entrenamiento.
+    // Déjalo a 0 para partidas simétricas; súbelo para un rival más duro.
+    // Varíalo entre episodios para que el agente no se aprenda a UN solo rival.
+    public int maderaExtraInicio = 0;
+    public int piedraExtraInicio = 0;
+    public int oroExtraInicio = 0;
+
+    [Header("Subida de Nivel")]
+    public bool subirNivelAutomatico = true; // La IA mejora su castillo para ampliar población y desbloquear edificios
+    public int nivelObjetivo = 6;            // Nivel al que la IA intenta llegar de forma PRIORITARIA (6 = población 15)
+
     [Header("Tiempos")]
     public float segundosEntreDecisiones = 3f; // Bajo para pruebas (sube a 10-15 en la versión final)
+
+    [Header("Expediciones (antes de atacar)")]
+    public int numeroExpediciones = 3;     // Cuántas salidas de exploración hace antes del asalto
+    public int tropasPorExpedicion = 2;    // Cuántas tropas salen en cada partida (el resto se queda en el castillo)
+    public float radioExpedicion = 25f;    // Hasta dónde se alejan a explorar
+    public int minTropasParaAtacar = 4;    // Ejército mínimo para lanzar el asalto
+
+    [Header("Formación de Asalto")]
+    public RolFormacion rolCaballeros = RolFormacion.Centro; // Dónde van los caballeros del castillo
+    public float distanciaPreparacion = 12f; // A qué distancia de la base enemiga se reúnen antes de cargar
+    public float separacionFilas = 3f;       // Distancia entre la fila de frente, centro y retaguardia
+    public float espaciadoLateral = 1.5f;    // Separación entre tropas de una misma fila
+    public int ciclosParaCargar = 2;         // Ciclos de decisión que pasan formándose antes de cargar
 
     [Header("Construcción Procedimental")]
     public float radioConstruccionMin = 3f;  // Distancia MÍNIMA: no pegar edificios al castillo
@@ -56,10 +138,48 @@ public class IAEnemiga : MonoBehaviour
     private List<Vector3> puntosDeAnclaje = new List<Vector3>();
     private List<bool> anclajesOcupados = new List<bool>();
 
-    // Conteo de tropas y progreso del plan
-    private int recolectoresActuales = 0;
+    // Progreso del plan
     private int planActual = 0; // En qué edificio de la lista vamos
-    private List<GameObject> miEjercito = new List<GameObject>();
+
+    // Unidades VIVAS del castillo. Si mueren salen de la lista y se reponen.
+    private List<GameObject> misLeñadores = new List<GameObject>();
+    private List<GameObject> misCaballeros = new List<GameObject>();
+    // Máximos alcanzados: solo reponemos hasta aquí, para no adelantar fases.
+    private int picoLeñadores = 0;
+    private int picoCaballeros = 0;
+
+    // Cada miembro del ejército guarda su objeto y su rol de formación
+    private class MiembroEjercito
+    {
+        public GameObject objeto;
+        public RolFormacion rol;
+        public MiembroEjercito(GameObject o, RolFormacion r) { objeto = o; rol = r; }
+    }
+    private List<MiembroEjercito> miEjercito = new List<MiembroEjercito>();
+
+    // Estado de las expediciones
+    private int expedicionesHechas = 0;
+    private int indiceExpedicion = 0;            // Para rotar qué tropas salen cada vez
+    private List<GameObject> partidaFuera = new List<GameObject>(); // Tropas que están explorando ahora
+
+    // Estado del asalto en formación
+    private bool enFormacion = false;
+    private bool cargando = false;
+    private int ciclosEnFormacion = 0;
+
+    // Control de bloqueos
+    private FaseEstrategia faseRegistrada;
+    private int ciclosEnFase = 0;
+    private float tiempoDePartida = 0f;
+    private float intervaloReal = 3f; // el ritmo realmente usado (con su variación)
+
+    // Reacción: defensa y retirada
+    [System.NonSerialized] public bool defendiendoAhora = false; // true mientras hay invasores
+    private int picoEjercito = 0; // Mayor tamaño que llegó a tener el ejército
+
+    // Valores "de esta partida" (los del Inspector con su variación aleatoria aplicada)
+    private int expedicionesObjetivo;
+    private int tropasMinimasAtacar;
 
     void Start()
     {
@@ -68,9 +188,24 @@ public class IAEnemiga : MonoBehaviour
 
         if (miBase != null)
         {
+            AplicarVentajaInicial();
+            AplicarVariabilidad();
             Invoke("SpawnInicial", 1f);
-            InvokeRepeating("TomarDecisionEstrategica", segundosEntreDecisiones, segundosEntreDecisiones);
         }
+    }
+
+    // Suma la ventaja configurada. Con todo a 0 la IA juega exactamente
+    // con las mismas reglas y los mismos recursos que el jugador.
+    void AplicarVentajaInicial()
+    {
+        if (miBase == null) return;
+        if (maderaExtraInicio == 0 && piedraExtraInicio == 0 && oroExtraInicio == 0) return;
+
+        miBase.madera += maderaExtraInicio;
+        miBase.piedra += piedraExtraInicio;
+        miBase.oro += oroExtraInicio;
+
+        Debug.Log($"IAEnemiga: ventaja inicial aplicada (M:{maderaExtraInicio} P:{piedraExtraInicio} O:{oroExtraInicio}).");
     }
 
     // ====================================================================
@@ -85,35 +220,81 @@ public class IAEnemiga : MonoBehaviour
 
         // Volvemos al principio de la estrategia
         faseActual = FaseEstrategia.Economia;
-        recolectoresActuales = 0;
         planActual = 0;
+
+        misLeñadores.Clear();
+        misCaballeros.Clear();
+        picoLeñadores = 0;
+        picoCaballeros = 0;
         miEjercito.Clear();
+
+        // Estado de expediciones y asalto
+        expedicionesHechas = 0;
+        indiceExpedicion = 0;
+        partidaFuera.Clear();
+        enFormacion = false;
+        cargando = false;
+        ciclosEnFormacion = 0;
+
+        // Estado reactivo (defensa y retirada)
+        defendiendoAhora = false;
+        picoEjercito = 0;
 
         // Reseteamos el estado en tiempo de ejecución de cada entrada del plan
         foreach (PlanEdificio p in planConstruccion)
         {
             p.edificioConstruido = null; // los viejos ya no existen
-            p.tropasReclutadas = 0;
+            if (p.tropasVivas == null) p.tropasVivas = new List<GameObject>();
+            p.tropasVivas.Clear();
+            p.pico = 0;
         }
 
         // Liberamos todos los huecos de construcción (sus edificios fueron destruidos)
         for (int i = 0; i < anclajesOcupados.Count; i++) anclajesOcupados[i] = false;
 
-        // Re-armamos el ciclo desde cero
+        // Re-armamos el ciclo desde cero, con una personalidad nueva para este episodio
+        AplicarVentajaInicial();
+        AplicarVariabilidad();
         Invoke("SpawnInicial", 1f);
-        InvokeRepeating("TomarDecisionEstrategica", segundosEntreDecisiones, segundosEntreDecisiones);
     }
 
     void SpawnInicial()
     {
         for (int i = 0; i < 2; i++)
         {
-            if (miBase.ComprarLeñador() != null) recolectoresActuales++;
+            GameObject leñador = miBase.ComprarLeñador();
+            if (leñador != null) RegistrarLeñador(leñador);
         }
     }
 
     void TomarDecisionEstrategica()
     {
+        // Contamos tiempo y cuánto llevamos en la misma fase (para detectar bloqueos)
+        tiempoDePartida += intervaloReal;
+        if (faseActual != faseRegistrada) { faseRegistrada = faseActual; ciclosEnFase = 0; }
+        else ciclosEnFase++;
+
+        GestionarBloqueos();
+
+        // El ejército reacciona a las invasiones, pero la ECONOMÍA NO SE DETIENE:
+        // un jugador defiende Y sigue produciendo al mismo tiempo. Si esto cortara
+        // el ciclo, bastaría con merodear cerca de su base para paralizarla entera.
+        bool invasion = GestionarDefensa();
+
+        // PRIORIDAD 2: reponer las bajas. Si el jugador le mata los leñadores o los
+        // mineros, la IA los vuelve a fabricar en lugar de quedarse sin economía.
+        // Se hace en TODAS las fases, no solo en la que los creó.
+        if (ReponerBajas()) return;
+
+        // PRIORIDAD 3: invertir en subir de nivel hacia el objetivo (si puede pagarlo).
+        // Esto hace crecer su población y le desbloquea edificios, como a un jugador.
+        GestionarSubidaNivel();
+
+        // Mientras defiende su casa no manda al ejército fuera (ni expedición ni asalto),
+        // pero sí sigue con economía, construcción y reclutamiento.
+        if (invasion && (faseActual == FaseEstrategia.Expedicion || faseActual == FaseEstrategia.Asedio))
+            return;
+
         switch (faseActual)
         {
             case FaseEstrategia.Economia:
@@ -128,21 +309,353 @@ public class IAEnemiga : MonoBehaviour
                 LogicaPreparacion();
                 break;
 
+            case FaseEstrategia.Expedicion:
+                LogicaExpedicion();
+                break;
+
             case FaseEstrategia.Asedio:
                 LogicaAsedio();
                 break;
         }
     }
 
+    // ====================================================================
+    // SUBIDA DE NIVEL: la IA mejora su castillo igual que el jugador, lo que
+    // amplía su población máxima y le desbloquea edificios de mayor nivel.
+    // Es reactiva: sube cuando le hace falta y solo si puede pagarlo.
+    // ====================================================================
+
+    // ====================================================================
+    // UNIDADES VIVAS Y REPOSICIÓN DE BAJAS
+    // Los contadores no son "cuántas he fabricado" sino "cuántas siguen vivas".
+    // Así, si el enemigo le mata trabajadores o soldados, la IA los repone en
+    // lugar de quedarse tullida para el resto de la partida.
+    // ====================================================================
+
+    int LeñadoresVivos()
+    {
+        misLeñadores.RemoveAll(t => t == null);
+        return misLeñadores.Count;
+    }
+
+    int CaballerosVivos()
+    {
+        misCaballeros.RemoveAll(t => t == null);
+        return misCaballeros.Count;
+    }
+
+    void RegistrarLeñador(GameObject g)
+    {
+        if (g == null) return;
+        misLeñadores.Add(g);
+        if (misLeñadores.Count > picoLeñadores) picoLeñadores = misLeñadores.Count;
+    }
+
+    void RegistrarCaballero(GameObject g)
+    {
+        if (g == null) return;
+        misCaballeros.Add(g);
+        if (misCaballeros.Count > picoCaballeros) picoCaballeros = misCaballeros.Count;
+        miEjercito.Add(new MiembroEjercito(g, rolCaballeros));
+    }
+
+    // Repone UNA baja por ciclo, con prioridad económica (sin madera no hay nada).
+    // Solo repone hasta el máximo que llegó a tener, para no adelantarse a las fases.
+    // Devuelve true si ha usado el ciclo en reponer.
+    bool ReponerBajas()
+    {
+        if (miBase == null) return false;
+
+        // 1. LEÑADORES: son la base de todo, la madera paga niveles, edificios y tropas
+        int objetivoLeñadores = Mathf.Min(limiteRecolectores, picoLeñadores);
+        if (LeñadoresVivos() < objetivoLeñadores)
+        {
+            if (!HayHuecoPoblacion()) return false;
+
+            GameObject nuevo = miBase.ComprarLeñador();
+            if (nuevo != null)
+            {
+                RegistrarLeñador(nuevo);
+                Debug.Log($"IAEnemiga: repuesto LEÑADOR caído ({LeñadoresVivos()}/{limiteRecolectores}).");
+                return true;
+            }
+            return false; // no le llega: ahorra, pero no bloquea el resto
+        }
+
+        // 2. TROPAS DE EDIFICIOS ECONÓMICOS (mineros, tesoreros): piedra y oro
+        foreach (PlanEdificio plan in planConstruccion)
+        {
+            if (plan.tropasSonMilitares) continue;
+            if (plan.edificioConstruido == null) continue;
+
+            int objetivo = Mathf.Min(plan.tropasAReclutar, plan.pico);
+            if (plan.Vivas() < objetivo)
+            {
+                if (!HayHuecoPoblacion()) return false;
+
+                GameObject nuevo = plan.edificioConstruido.ComprarTropa();
+                if (nuevo != null)
+                {
+                    plan.Registrar(nuevo);
+                    Debug.Log($"IAEnemiga: repuesto trabajador de '{plan.nombre}' ({plan.Vivas()}/{plan.tropasAReclutar}).");
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        // 3. CABALLEROS
+        int objetivoCaballeros = Mathf.Min(cantidadCaballeros, picoCaballeros);
+        if (CaballerosVivos() < objetivoCaballeros)
+        {
+            if (!HayHuecoPoblacion()) return false;
+
+            GameObject nuevo = miBase.ComprarCaballero();
+            if (nuevo != null)
+            {
+                RegistrarCaballero(nuevo);
+                Debug.Log($"IAEnemiga: repuesto CABALLERO caído ({CaballerosVivos()}/{cantidadCaballeros}).");
+                return true;
+            }
+            return false;
+        }
+
+        // 4. TROPAS MILITARES DE EDIFICIOS (arqueros, gladiadores)
+        foreach (PlanEdificio plan in planConstruccion)
+        {
+            if (!plan.tropasSonMilitares) continue;
+            if (plan.edificioConstruido == null) continue;
+
+            int objetivo = Mathf.Min(plan.tropasAReclutar, plan.pico);
+            if (plan.Vivas() < objetivo)
+            {
+                if (!HayHuecoPoblacion()) return false;
+
+                GameObject nuevo = plan.edificioConstruido.ComprarTropa();
+                if (nuevo != null)
+                {
+                    plan.Registrar(nuevo);
+                    miEjercito.Add(new MiembroEjercito(nuevo, plan.rolFormacion));
+                    Debug.Log($"IAEnemiga: repuesto soldado de '{plan.nombre}' ({plan.Vivas()}/{plan.tropasAReclutar}).");
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        return false; // no había bajas que reponer
+    }
+
+    // ====================================================================
+    // ANTI-BLOQUEO
+    // Ninguna fase puede eternizarse. Si la IA no puede progresar (sin recursos,
+    // sin hueco de población, sin sitio donde construir...), pasa a lo siguiente.
+    // Y pasado cierto tiempo ataca con lo que tenga, para que la partida SIEMPRE
+    // se resuelva. Sin esto, un agente que no hace nada y una IA atascada darían
+    // episodios infinitos y el entrenamiento no avanzaría.
+    // ====================================================================
+    void GestionarBloqueos()
+    {
+        // --- Ataque forzoso por tiempo ---
+        if (tiempoDePartida >= segundosHastaAtaqueForzoso && faseActual != FaseEstrategia.Asedio)
+        {
+            Debug.LogWarning($"IAEnemiga: se acabó el tiempo de preparación. ¡ATAQUE FORZOSO con {miEjercito.Count} unidades!");
+            faseActual = FaseEstrategia.Asedio;
+            ciclosEnFase = 0;
+            return;
+        }
+
+        // --- Si estamos en Asedio sin ejército, a rehacerlo ---
+        if (faseActual == FaseEstrategia.Asedio)
+        {
+            miEjercito.RemoveAll(m => m.objeto == null);
+            if (miEjercito.Count == 0 && tiempoDePartida < segundosHastaAtaqueForzoso)
+            {
+                Debug.Log("IAEnemiga: me he quedado sin ejército, vuelvo a reclutar.");
+                enFormacion = false; cargando = false; ciclosEnFase = 0;
+                faseActual = FaseEstrategia.PreparacionMilitar;
+            }
+            return;
+        }
+
+        // --- Paciencia por fase ---
+        if (ciclosEnFase < ciclosMaximosPorFase) return;
+
+        ciclosEnFase = 0;
+
+        switch (faseActual)
+        {
+            case FaseEstrategia.Economia:
+                Debug.LogWarning("IAEnemiga: economía atascada, paso a construir de todos modos.");
+                faseActual = FaseEstrategia.Construccion;
+                break;
+
+            case FaseEstrategia.Construccion:
+                // No puede pagar/colocar este edificio: lo salta y sigue con el plan
+                Debug.LogWarning($"IAEnemiga: no consigo avanzar con el edificio {planActual}, lo salto.");
+                planActual++;
+                if (planActual >= planConstruccion.Count)
+                    faseActual = FaseEstrategia.PreparacionMilitar;
+                break;
+
+            case FaseEstrategia.PreparacionMilitar:
+                Debug.LogWarning($"IAEnemiga: no puedo completar el ejército ({miEjercito.Count}), salgo con lo que hay.");
+                faseActual = FaseEstrategia.Expedicion;
+                break;
+
+            case FaseEstrategia.Expedicion:
+                Debug.LogWarning("IAEnemiga: expediciones atascadas, paso directamente al asalto.");
+                faseActual = FaseEstrategia.Asedio;
+                break;
+        }
+    }
+
+    // ====================================================================
+    // REACCIÓN 1: DEFENSA DE LA BASE
+    // Si aparecen enemigos cerca de casa (atacando el castillo, los edificios
+    // o los trabajadores), la IA abandona lo que esté haciendo y vuelve.
+    // Es lo que más "humano" la hace: un jugador nunca ignora una invasión.
+    // ====================================================================
+
+    // Devuelve true si este ciclo se ha dedicado a defender.
+    bool GestionarDefensa()
+    {
+        if (!defenderLaBase) return false;
+
+        Tropa invasor = BuscarInvasorMasCercano();
+
+        // --- No hay invasores: si estábamos defendiendo, volvemos a lo nuestro ---
+        if (invasor == null)
+        {
+            if (defendiendoAhora)
+            {
+                defendiendoAhora = false;
+
+                // Si estábamos asaltando, hay que rehacer la formación desde cero
+                enFormacion = false;
+                cargando = false;
+                ciclosEnFormacion = 0;
+
+                Debug.Log($"IAEnemiga: territorio despejado, retomando la fase {faseActual}.");
+            }
+            return false;
+        }
+
+        // --- Hay invasores: el ejército vuelve, pero la economía NO se detiene ---
+        if (!defendiendoAhora)
+        {
+            defendiendoAhora = true;
+            Debug.Log($"IAEnemiga: ¡ENEMIGOS EN LA BASE! Tropas a defender (sigo con {faseActual}).");
+        }
+
+        miEjercito.RemoveAll(m => m.objeto == null);
+
+        foreach (MiembroEjercito m in miEjercito)
+        {
+            if (m.objeto == null) continue;
+
+            // Solo llamamos a los que estén dentro del radio de llamada
+            float distancia = Vector3.Distance(m.objeto.transform.position, transform.position);
+            if (distancia > radioLlamadaTropas) continue;
+
+            Combate c = m.objeto.GetComponent<Combate>();
+            if (c == null) continue;
+
+            // Cada soldado va a por el invasor más cercano a ÉL, no todos al mismo
+            Tropa objetivo = BuscarInvasorMasCercanoA(m.objeto.transform.position);
+            if (objetivo != null) c.OrdenarAtaque(objetivo.transform);
+        }
+
+        return true;
+    }
+
+    // Enemigo más cercano a MI CASTILLO dentro del radio de defensa
+    Tropa BuscarInvasorMasCercano()
+    {
+        return BuscarInvasorEnRadio(transform.position, radioDefensaBase);
+    }
+
+    // Enemigo más cercano a un punto concreto (para repartir objetivos)
+    Tropa BuscarInvasorMasCercanoA(Vector3 posicion)
+    {
+        // Buscamos algo más lejos, porque el soldado puede estar en el borde
+        return BuscarInvasorEnRadio(posicion, radioDefensaBase * 1.5f);
+    }
+
+    Tropa BuscarInvasorEnRadio(Vector3 centro, float radio)
+    {
+        Collider[] detectados = Physics.OverlapSphere(centro, radio);
+        Tropa mejor = null;
+        float distanciaMinima = Mathf.Infinity;
+
+        foreach (Collider col in detectados)
+        {
+            Tropa t = col.GetComponent<Tropa>();
+            if (t == null || miBase == null) continue;
+            if (t.equipo == miBase.equipo) continue; // los míos no son invasores
+
+            float d = Vector3.Distance(centro, t.transform.position);
+            if (d < distanciaMinima)
+            {
+                distanciaMinima = d;
+                mejor = t;
+            }
+        }
+        return mejor;
+    }
+
+    // Cada ciclo intenta subir un nivel hacia el objetivo (de forma prioritaria).
+    // MejorarCastillo solo gasta si puede pagarlo, así que si no le llega, ahorra.
+    void GestionarSubidaNivel()
+    {
+        if (!subirNivelAutomatico) return;
+        if (miBase.nivelCastillo >= nivelObjetivo) return; // ya llegó al objetivo
+
+        IntentarSubirNivel();
+    }
+
+    // ¿Hay sitio en la población para reclutar? Si está llena, intenta subir de nivel.
+    bool HayHuecoPoblacion()
+    {
+        if (miBase.poblacionActual < miBase.poblacionMaxima) return true;
+
+        if (subirNivelAutomatico) IntentarSubirNivel();
+        return miBase.poblacionActual < miBase.poblacionMaxima;
+    }
+
+    // ¿El castillo tiene el nivel necesario? Si no, intenta subir hasta alcanzarlo.
+    bool TieneNivel(int nivelRequerido)
+    {
+        if (miBase.nivelCastillo >= nivelRequerido) return true;
+
+        if (subirNivelAutomatico) IntentarSubirNivel();
+        return miBase.nivelCastillo >= nivelRequerido;
+    }
+
+    // Llama a la mejora del castillo (que solo sube si la IA puede pagar el coste).
+    // El mensaje de "EL ENEMIGO ha subido a Nivel X" lo escribe la propia BaseMilitar.
+    void IntentarSubirNivel()
+    {
+        miBase.MejorarCastillo();
+    }
+
     // --- FASE ECONOMÍA: leñadores desde el castillo ---
     void LogicaEconomia()
     {
-        if (recolectoresActuales < limiteRecolectores)
+        if (LeñadoresVivos() < limiteRecolectores)
         {
-            if (miBase.ComprarLeñador() != null)
+            // Si la población está llena, la IA sube de nivel para hacer hueco
+            if (!HayHuecoPoblacion())
             {
-                recolectoresActuales++;
-                Debug.Log("IAEnemiga: Leñador reclutado.");
+                Debug.Log("IAEnemiga: población llena, ahorrando para mejorar el castillo...");
+                return;
+            }
+
+            GameObject leñador = miBase.ComprarLeñador();
+            if (leñador != null)
+            {
+                RegistrarLeñador(leñador);
+                Debug.Log($"IAEnemiga: Leñador reclutado ({LeñadoresVivos()}/{limiteRecolectores}).");
             }
             else
             {
@@ -179,6 +692,31 @@ public class IAEnemiga : MonoBehaviour
                 return;
             }
 
+            // El nivel requerido y el precio están en el PROPIO PREFAB del edificio,
+            // que es la misma configuración que usa el jugador. Reglas iguales para ambos.
+            EdificioReclutamiento datos = EdificioReclutamiento.DatosDePrefab(plan.prefabEdificio);
+            if (datos == null)
+            {
+                Debug.LogWarning($"IAEnemiga: el prefab de '{plan.nombre}' no tiene EdificioReclutamiento, lo salto.");
+                planActual++;
+                return;
+            }
+
+            // ¿Tiene nivel de castillo? Si no, intenta subir (es prioritario).
+            if (!TieneNivel(datos.nivelRequerido))
+            {
+                Debug.Log($"IAEnemiga: '{plan.nombre}' requiere nivel {datos.nivelRequerido} (tengo {miBase.nivelCastillo}). Mejorando castillo...");
+                return;
+            }
+
+            // ¿Puede pagar el edificio? Si no, ahorra hasta el próximo ciclo.
+            string motivo;
+            if (!datos.PuedeConstruirlo(miBase, out motivo))
+            {
+                Debug.Log($"IAEnemiga: no puede construir '{plan.nombre}': {motivo}. Ahorrando...");
+                return;
+            }
+
             plan.edificioConstruido = ConstruirEdificio(plan.prefabEdificio);
 
             if (plan.edificioConstruido == null)
@@ -188,53 +726,227 @@ public class IAEnemiga : MonoBehaviour
                 return;
             }
 
-            Debug.Log($"IAEnemiga: '{plan.nombre}' construido.");
+            // Construido: ahora se cobra el precio
+            plan.edificioConstruido.CobrarConstruccion(miBase);
+            Debug.Log($"IAEnemiga: '{plan.nombre}' construido (M:{datos.costeConstruccionMadera} P:{datos.costeConstruccionPiedra} O:{datos.costeConstruccionOro}).");
             return;
         }
 
-        // 2. Reclutar sus tropas
-        if (plan.tropasReclutadas < plan.tropasAReclutar)
+        // 2. Reclutar solo las tropas ECONÓMICAS (mineros, recolectores de oro...).
+        //    Las militares se reclutan más tarde, en la fase militar, para formar
+        //    el ejército de forma ordenada. Aquí los edificios militares solo se levantan.
+        if (!plan.tropasSonMilitares && plan.Vivas() < plan.tropasAReclutar)
         {
+            if (!HayHuecoPoblacion())
+            {
+                Debug.Log("IAEnemiga: población llena, mejorando castillo para sacar más recolectores...");
+                return;
+            }
+
             GameObject tropa = plan.edificioConstruido.ComprarTropa();
             if (tropa != null)
             {
-                plan.tropasReclutadas++;
-                if (plan.tropasSonMilitares) miEjercito.Add(tropa); // las militares irán al asedio
-                Debug.Log($"IAEnemiga: tropa {plan.tropasReclutadas}/{plan.tropasAReclutar} de '{plan.nombre}'.");
+                plan.Registrar(tropa);
+                Debug.Log($"IAEnemiga: recolector {plan.Vivas()}/{plan.tropasAReclutar} de '{plan.nombre}'.");
             }
             return;
         }
 
-        // 3. Edificio terminado -> siguiente de la lista
+        // 3. Edificio terminado (construido y, si era económico, con sus recolectores) -> siguiente
         planActual++;
     }
 
-    // --- FASE MILITAR: caballeros desde el castillo ---
+    // --- FASE MILITAR: forma el ejército de forma ASCENDENTE ---
+    // 1º caballeros (básico, del castillo)
+    // 2º las tropas de los edificios militares, en el ORDEN del plan
+    //    (ordena el plan de débil a fuerte: Arquería antes que Coliseo, etc.)
+    // Cuando todo está reclutado -> Asedio.
     void LogicaPreparacion()
     {
-        miEjercito.RemoveAll(soldado => soldado == null);
-
-        if (miEjercito.Count < limiteEjercito)
+        // 1. Caballeros desde el castillo (la base del ejército)
+        if (CaballerosVivos() < cantidadCaballeros)
         {
-            GameObject nuevoSoldado = miBase.ComprarCaballero();
-            if (nuevoSoldado != null)
+            // Si la población está llena, la IA sube de nivel para hacer hueco
+            if (!HayHuecoPoblacion())
             {
-                miEjercito.Add(nuevoSoldado);
-                Debug.Log($"IAEnemiga: Soldado registrado. Ejército: {miEjercito.Count}/{limiteEjercito}");
+                Debug.Log("IAEnemiga: población llena, mejorando castillo para el ejército...");
+                return;
+            }
+
+            GameObject caballero = miBase.ComprarCaballero();
+            if (caballero != null)
+            {
+                RegistrarCaballero(caballero);
+                Debug.Log($"IAEnemiga: caballero {CaballerosVivos()}/{cantidadCaballeros} reclutado.");
+            }
+            else
+            {
+                Debug.Log($"IAEnemiga: esperando MADERA para caballero (tiene {miBase.madera}, cuesta {miBase.costeCaballero}).");
+            }
+            return;
+        }
+
+        // 2. Tropas militares de los edificios, recorriendo el plan EN ORDEN.
+        //    Reclutamos una por ciclo (la primera entrada militar que aún no esté completa).
+        foreach (PlanEdificio plan in planConstruccion)
+        {
+            if (!plan.tropasSonMilitares) continue;     // las económicas ya se hicieron
+            if (plan.edificioConstruido == null) continue; // no se llegó a construir, lo ignoramos
+
+            if (plan.Vivas() < plan.tropasAReclutar)
+            {
+                if (!HayHuecoPoblacion())
+                {
+                    Debug.Log("IAEnemiga: población llena, mejorando castillo para el ejército...");
+                    return;
+                }
+
+                GameObject tropa = plan.edificioConstruido.ComprarTropa();
+                if (tropa != null)
+                {
+                    plan.Registrar(tropa);
+                    miEjercito.Add(new MiembroEjercito(tropa, plan.rolFormacion));
+                    Debug.Log($"IAEnemiga: {plan.nombre} {plan.Vivas()}/{plan.tropasAReclutar} (ejército: {miEjercito.Count}).");
+                }
+                return; // una tropa por decisión, para que se note la progresión
             }
         }
-        else
+
+        // 3. Ejército completo -> a hacer expediciones antes de atacar
+        faseActual = FaseEstrategia.Expedicion;
+        Debug.Log($"IAEnemiga: ¡EJÉRCITO LISTO ({miEjercito.Count} unidades)! Empezando expediciones.");
+    }
+
+    // --- FASE EXPEDICIÓN: el grueso aguanta en el castillo y sale una partida pequeña a explorar ---
+    // Los recolectores siguen a su trabajo (son autónomos, no los tocamos). El grueso del
+    // ejército se queda idle en el castillo (su posición de spawn). Cada ciclo sacamos una
+    // partida pequeña a un punto del mapa y al ciclo siguiente la traemos de vuelta.
+    void LogicaExpedicion()
+    {
+        miEjercito.RemoveAll(m => m.objeto == null);
+
+        // ¿Listos para el asalto? (suficientes expediciones y tropas)
+        if (expedicionesHechas >= expedicionesObjetivo && miEjercito.Count >= tropasMinimasAtacar)
         {
+            partidaFuera.Clear();
             faseActual = FaseEstrategia.Asedio;
-            Debug.Log("IAEnemiga: ¡EJÉRCITO LISTO! ¡Iniciando fase de Asedio!");
+            Debug.Log($"IAEnemiga: expediciones completas. ¡Preparando asalto con {miEjercito.Count} unidades!");
             LogicaAsedio();
+            return;
+        }
+
+        // Si hay una partida explorando, la hacemos volver al castillo y contamos la expedición
+        if (partidaFuera.Count > 0)
+        {
+            foreach (GameObject g in partidaFuera)
+            {
+                if (g == null) continue;
+                Tropa t = g.GetComponent<Tropa>();
+                if (t != null) t.OrdenarMovimiento(PuntoCercaDelCastillo());
+            }
+            partidaFuera.Clear();
+            expedicionesHechas++;
+            Debug.Log($"IAEnemiga: expedición {expedicionesHechas}/{expedicionesObjetivo} de vuelta al castillo.");
+            return;
+        }
+
+        // No hay nadie fuera: mandamos una partida nueva a explorar
+        Vector3 destino;
+        if (BuscarPuntoExpedicion(out destino))
+        {
+            partidaFuera = SeleccionarPartidaExpedicion(tropasPorExpedicion);
+
+            // Con un ejército diminuto no se puede mandar a nadie fuera. Damos la
+            // expedición por hecha para no quedarnos dando vueltas eternamente.
+            if (partidaFuera.Count == 0)
+            {
+                expedicionesHechas++;
+                Debug.Log($"IAEnemiga: ejército demasiado pequeño para explorar, expedición {expedicionesHechas}/{expedicionesObjetivo} omitida.");
+                return;
+            }
+
+            foreach (GameObject g in partidaFuera)
+            {
+                Tropa t = g.GetComponent<Tropa>();
+                if (t == null) continue;
+                Vector2 sep = Random.insideUnitCircle * 1.5f;
+                t.OrdenarMovimiento(destino + new Vector3(sep.x, 0, sep.y));
+            }
+            Debug.Log($"IAEnemiga: partida de exploración saliendo ({partidaFuera.Count} tropas).");
         }
     }
 
-    // --- FASE ASEDIO: marchar al castillo enemigo ---
+    // Elige hasta 'cuantas' tropas rotando por el ejército, dejando SIEMPRE el grueso en casa
+    List<GameObject> SeleccionarPartidaExpedicion(int cuantas)
+    {
+        List<GameObject> partida = new List<GameObject>();
+        int total = miEjercito.Count;
+        if (total <= 1) return partida; // si solo hay una tropa, no la mandamos sola
+
+        // Nunca sacamos más de la mitad: el grupo grande siempre se queda en el castillo
+        cuantas = Mathf.Min(cuantas, total / 2);
+
+        for (int k = 0; k < cuantas; k++)
+        {
+            if (total == 0) break;
+            indiceExpedicion %= total;
+            GameObject g = miEjercito[indiceExpedicion].objeto;
+            indiceExpedicion = (indiceExpedicion + 1) % total;
+            if (g != null) partida.Add(g);
+        }
+        return partida;
+    }
+
+    // Punto aleatorio válido (en NavMesh) a cierta distancia del castillo
+    bool BuscarPuntoExpedicion(out Vector3 destino)
+    {
+        for (int intentos = 0; intentos < 15; intentos++)
+        {
+            Vector2 circulo = Random.insideUnitCircle * radioExpedicion;
+            Vector3 candidato = transform.position + new Vector3(circulo.x, 0, circulo.y);
+
+            UnityEngine.AI.NavMeshHit hit;
+            if (UnityEngine.AI.NavMesh.SamplePosition(candidato, out hit, 3f, UnityEngine.AI.NavMesh.AllAreas))
+            {
+                destino = hit.position;
+                return true;
+            }
+        }
+        destino = Vector3.zero;
+        return false;
+    }
+
+    // Un punto cerquita del castillo (para que las partidas vuelvan sin amontonarse)
+    Vector3 PuntoCercaDelCastillo()
+    {
+        Vector2 sep = Random.insideUnitCircle * 3f;
+        Vector3 candidato = transform.position + new Vector3(sep.x, 0, sep.y);
+
+        UnityEngine.AI.NavMeshHit hit;
+        if (UnityEngine.AI.NavMesh.SamplePosition(candidato, out hit, 3f, UnityEngine.AI.NavMesh.AllAreas))
+            return hit.position;
+        return transform.position;
+    }
+
+    // --- FASE ASEDIO: reunir en formación cerca de la base enemiga y cargar todos juntos ---
     void LogicaAsedio()
     {
-        miEjercito.RemoveAll(soldado => soldado == null);
+        miEjercito.RemoveAll(m => m.objeto == null);
+        if (miEjercito.Count > picoEjercito) picoEjercito = miEjercito.Count;
+
+        // --- REACCIÓN 2: RETIRADA ---
+        // Si el asalto va mal y ha perdido buena parte del ejército, se retira a casa
+        // y vuelve a la fase militar para rehacer fuerzas. Es lo que haría un jugador,
+        // en vez de seguir enviando soldados sueltos a que los maten.
+        if (retirarseSiPierde && cargando && picoEjercito > 0)
+        {
+            if (miEjercito.Count < Mathf.CeilToInt(picoEjercito * umbralRetirada))
+            {
+                Debug.Log($"IAEnemiga: asalto fracasado ({miEjercito.Count}/{picoEjercito}). ¡RETIRADA! Rehaciendo el ejército.");
+                Retirarse();
+                return;
+            }
+        }
 
         BaseMilitar baseEnemiga = BuscarBaseEnemiga();
         if (baseEnemiga == null)
@@ -243,18 +955,146 @@ public class IAEnemiga : MonoBehaviour
             return;
         }
 
-        foreach (GameObject soldado in miEjercito)
+        // 3) Ya estamos cargando: reforzamos (los que no estén asediando, que asedien)
+        if (cargando)
         {
-            if (soldado == null) continue;
-
-            Combate combate = soldado.GetComponent<Combate>();
-            if (combate != null && !combate.EstaAsediando())
+            foreach (MiembroEjercito m in miEjercito)
             {
-                combate.OrdenarAsedio(baseEnemiga.transform);
+                if (m.objeto == null) continue;
+                Combate c = m.objeto.GetComponent<Combate>();
+                if (c != null && !c.EstaAsediando()) c.OrdenarAsedio(baseEnemiga.transform);
             }
+            return;
         }
 
-        Debug.Log($"Comandante Rojo: asediando {baseEnemiga.gameObject.name} con {miEjercito.Count} soldados.");
+        // 1) Primero los mandamos a formar cerca de la base enemiga
+        if (!enFormacion)
+        {
+            ColocarEnFormacion(baseEnemiga.transform);
+            enFormacion = true;
+            ciclosEnFormacion = 0;
+            Debug.Log("Comandante Rojo: tropas tomando formación de asalto.");
+            return;
+        }
+
+        // 2) Les damos unos ciclos para agruparse y luego cargan todos a la vez
+        ciclosEnFormacion++;
+        if (ciclosEnFormacion >= ciclosParaCargar)
+        {
+            foreach (MiembroEjercito m in miEjercito)
+            {
+                if (m.objeto == null) continue;
+                Combate c = m.objeto.GetComponent<Combate>();
+                if (c != null) c.OrdenarAsedio(baseEnemiga.transform);
+            }
+            cargando = true;
+            Debug.Log($"Comandante Rojo: ¡CARGA! Asaltando {baseEnemiga.gameObject.name} con {miEjercito.Count} soldados.");
+        }
+    }
+
+    // Pequeñas variaciones por partida: el rival deja de ser idéntico cada vez.
+    // Importante para el entrenamiento: evita que el agente memorice UNA secuencia.
+    void AplicarVariabilidad()
+    {
+        // Reloj y contadores de bloqueo a cero: empieza una partida nueva
+        tiempoDePartida = 0f;
+        ciclosEnFase = 0;
+        faseRegistrada = faseActual;
+
+        expedicionesObjetivo = numeroExpediciones;
+        tropasMinimasAtacar = minTropasParaAtacar;
+
+        if (!comportamientoVariable)
+        {
+            CancelInvoke("TomarDecisionEstrategica");
+            intervaloReal = segundosEntreDecisiones;
+            InvokeRepeating("TomarDecisionEstrategica", segundosEntreDecisiones, segundosEntreDecisiones);
+            return;
+        }
+
+        expedicionesObjetivo = Mathf.Max(0, numeroExpediciones + Random.Range(-variacionExpediciones, variacionExpediciones + 1));
+        tropasMinimasAtacar = Mathf.Max(1, minTropasParaAtacar + Random.Range(-variacionTropasAtacar, variacionTropasAtacar + 1));
+
+        // El ritmo de decisión también varía: unas partidas es más ágil que otras
+        float ritmo = segundosEntreDecisiones * (1f + Random.Range(-variacionRitmo, variacionRitmo));
+        ritmo = Mathf.Max(0.5f, ritmo);
+
+        CancelInvoke("TomarDecisionEstrategica");
+        intervaloReal = ritmo;
+        InvokeRepeating("TomarDecisionEstrategica", ritmo, ritmo);
+
+        Debug.Log($"IAEnemiga: personalidad de esta partida -> expediciones {expedicionesObjetivo}, ataca con {tropasMinimasAtacar}, ritmo {ritmo:F1}s.");
+    }
+
+    // Manda a los supervivientes de vuelta a casa y vuelve a fase militar
+    void Retirarse()
+    {
+        foreach (MiembroEjercito m in miEjercito)
+        {
+            if (m.objeto == null) continue;
+
+            Combate c = m.objeto.GetComponent<Combate>();
+            if (c != null) c.CancelarAtaque();
+
+            Tropa t = m.objeto.GetComponent<Tropa>();
+            if (t != null) t.OrdenarMovimiento(PuntoCercaDelCastillo());
+        }
+
+        // Reseteamos el asalto y volvemos a reclutar
+        enFormacion = false;
+        cargando = false;
+        ciclosEnFormacion = 0;
+        picoEjercito = miEjercito.Count; // el nuevo listón parte de lo que queda
+        faseActual = FaseEstrategia.PreparacionMilitar;
+    }
+
+    // Coloca el ejército en 3 filas (frente / centro / retaguardia) mirando a la base enemiga
+    void ColocarEnFormacion(Transform baseEnemiga)
+    {
+        Vector3 dir = baseEnemiga.position - transform.position;
+        dir.y = 0f;
+        if (dir.sqrMagnitude < 0.01f) dir = transform.forward;
+        dir.Normalize();
+
+        Vector3 perp = Vector3.Cross(Vector3.up, dir); // eje lateral de las filas
+        Vector3 reunion = baseEnemiga.position - dir * distanciaPreparacion; // punto de partida del asalto
+
+        // Repartimos las tropas según su rol
+        List<GameObject> frente = new List<GameObject>();
+        List<GameObject> centro = new List<GameObject>();
+        List<GameObject> retaguardia = new List<GameObject>();
+
+        foreach (MiembroEjercito m in miEjercito)
+        {
+            if (m.objeto == null) continue;
+            if (m.rol == RolFormacion.Frente) frente.Add(m.objeto);
+            else if (m.rol == RolFormacion.Retaguardia) retaguardia.Add(m.objeto);
+            else centro.Add(m.objeto);
+        }
+
+        // Frente más cerca de la base (+dir), retaguardia más lejos (-dir)
+        ColocarFila(frente, reunion + dir * separacionFilas, perp);
+        ColocarFila(centro, reunion, perp);
+        ColocarFila(retaguardia, reunion - dir * separacionFilas, perp);
+    }
+
+    // Coloca una fila de tropas, centrada y separada lateralmente
+    void ColocarFila(List<GameObject> fila, Vector3 centroFila, Vector3 perp)
+    {
+        for (int i = 0; i < fila.Count; i++)
+        {
+            if (fila[i] == null) continue;
+
+            float desplazamiento = (i - (fila.Count - 1) / 2f) * espaciadoLateral;
+            Vector3 slot = centroFila + perp * desplazamiento;
+
+            UnityEngine.AI.NavMeshHit hit;
+            if (UnityEngine.AI.NavMesh.SamplePosition(slot, out hit, 3f, UnityEngine.AI.NavMesh.AllAreas))
+                slot = hit.position;
+
+            Tropa t = fila[i].GetComponent<Tropa>();
+            if (t != null) t.OrdenarMovimiento(slot);
+        }
     }
 
     // --- CONSTRUCCIÓN (mecanismo) ---

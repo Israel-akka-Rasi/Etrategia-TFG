@@ -160,7 +160,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 6471491849626687814}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.1
+  m_Radius: 0.08
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 50
@@ -172,7 +172,7 @@ NavMeshAgent:
   m_Height: 0.5
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
-  m_ObstacleAvoidanceType: 4
+  m_ObstacleAvoidanceType: 0
 --- !u!114 &7752270921667781321
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -186,7 +186,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Tropa
   equipo: 0
-  salud: 3
+  salud: 100
   saludMaxima: 0
   indicadorSeleccion: {fileID: 410845817477274290}
   barraSalud: {fileID: 6482578537794591523}
@@ -203,10 +203,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1642fedac56ef8642aa39811dc40fbbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Combate
-  dano: 1
+  dano: 12
   rangoAtaque: 1.5
   tiempoEntreAtaques: 1
-  radioVision: 5
+  radioVision: 8
+  intervaloRecalculo: 0.25
+  umbralMovimientoObjetivo: 1
 --- !u!114 &-2510734480646810618
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -214,7 +216,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6471491849626687814}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 36d176dbcfd351d4e8155b5fb9a14922, type: 3}
   m_Name: 
@@ -224,6 +226,8 @@ MonoBehaviour:
   puedeOro: 0
   tiempoEntreRecoleccion: 1.5
   distanciaDeTrabajo: 1.5
+  buscarOtroAlAgotarse: 1
+  radioBusquedaNodo: 40
 --- !u!114 &6353139532005990545
 MonoBehaviour:
   m_ObjectHideFlags: 0

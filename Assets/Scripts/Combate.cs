@@ -4,18 +4,25 @@ using UnityEngine.AI;
 public class Combate : MonoBehaviour
 {
     [Header("Estadísticas")]
-    public int dano = 1;
-    public float rangoAtaque = 1.5f;
+    public int dano = 12;              // Caballero (línea base)
+    public float rangoAtaque = 1.5f;   // 1.5 cuerpo a cuerpo | ~7 a distancia
     public float tiempoEntreAtaques = 1f;
 
     [Header("Inteligencia Artificial")]
-    public float radioVision = 5f;
+    public float radioVision = 8f;     // SIEMPRE mayor que rangoAtaque
 
     private float temporizador;
     private Transform objetivo;        // Objetivo INMEDIATO (a quién golpeo ahora mismo)
     private Transform objetivoFinal;   // Objetivo FINAL del asedio (el castillo). Si es null, no hay asedio.
     private NavMeshAgent agente;
     private Tropa miTropa;
+
+    [Header("Optimización de ruta")]
+    public float intervaloRecalculo = 0.25f; // Cada cuánto, como mucho, se recalcula la ruta al perseguir
+    public float umbralMovimientoObjetivo = 1f; // Si el objetivo se mueve más de esto, recalculamos ya
+
+    private float temporizadorRuta;
+    private Vector3 ultimoDestino;
 
     void Start()
     {
@@ -82,7 +89,20 @@ public class Combate : MonoBehaviour
         else
         {
             agente.isStopped = false; // Soltamos el freno para perseguir
-            agente.SetDestination(objetivo.position);
+
+            // En vez de recalcular la ruta cada frame (caro y genera microtemblor),
+            // lo hacemos solo de vez en cuando, o si el objetivo se ha movido bastante.
+            temporizadorRuta += Time.deltaTime;
+
+            bool objetivoSeMovio = Vector3.Distance(objetivo.position, ultimoDestino) > umbralMovimientoObjetivo;
+            bool tocaRecalcular = temporizadorRuta >= intervaloRecalculo;
+
+            if (objetivoSeMovio || tocaRecalcular)
+            {
+                agente.SetDestination(objetivo.position);
+                ultimoDestino = objetivo.position;
+                temporizadorRuta = 0f;
+            }
         }
     }
 
@@ -155,6 +175,7 @@ public class Combate : MonoBehaviour
         objetivo = nuevoObjetivo;
         objetivoFinal = null; // sin asedio: no intercepta a terceros
         temporizador = tiempoEntreAtaques; // primer golpe nada más llegar
+        temporizadorRuta = intervaloRecalculo; // recalcular la ruta ya, en el primer frame
     }
 
     public void OrdenarAtaque(Tropa tropaObjetivo)
@@ -168,6 +189,7 @@ public class Combate : MonoBehaviour
         objetivoFinal = castilloEnemigo;
         objetivo = castilloEnemigo;
         temporizador = tiempoEntreAtaques;
+        temporizadorRuta = intervaloRecalculo; // recalcular la ruta ya, en el primer frame
     }
 
     public bool TieneObjetivo()

@@ -155,19 +155,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BaseMilitar
   equipo: 1
   nivelCastillo: 1
-  madera: 30
+  madera: 40
   piedra: 0
   oro: 0
   poblacionActual: 1
-  poblacionMaxima: 30
-  salud: 1000
+  poblacionMaxima: 8
+  poblacionPorNivel: 2
+  salud: 2000
   barraSalud: {fileID: 0}
   puntoSpawn: {fileID: 7116432077809340974}
-  costeBaseMejora: 50
   "prefabLe\xF1ador": {fileID: 8302275368063891483, guid: e2ab2b5e591bdcc4b8b7aed2ff203e4e, type: 3}
   "costeLe\xF1ador": 10
   prefabCaballero: {fileID: 8302275368063891483, guid: 84fd45dbf41fee34fa847ca74e702cf6, type: 3}
-  costeCaballero: 10
+  costeCaballero: 12
+  nivelMaximo: 6
+  costeBaseMejora: 50
+  costePiedraMejora: 15
+  costeOroMejora: 10
 --- !u!65 &4318329885324288829
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -218,30 +222,62 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IAEnemiga
   faseActual: 0
-  limiteRecolectores: 2
-  limiteEjercito: 3
+  limiteRecolectores: 4
+  cantidadCaballeros: 3
   planConstruccion:
   - nombre: Minero
     prefabEdificio: {fileID: 7463210280705011798, guid: b717fd0aa2450e74e86521635bd32b71, type: 3}
     tropasAReclutar: 3
     tropasSonMilitares: 0
+    rolFormacion: 0
   - nombre: Arqueros
-    prefabEdificio: {fileID: 7463210280705011798, guid: b717fd0aa2450e74e86521635bd32b71, type: 3}
-    tropasAReclutar: 3
+    prefabEdificio: {fileID: 4873508265993156890, guid: c1df14e05cf8fbb40b8b86dfb8a35d58, type: 3}
+    tropasAReclutar: 2
     tropasSonMilitares: 1
+    rolFormacion: 2
   - nombre: Tesoreros
     prefabEdificio: {fileID: 91207977346276211, guid: 48f767a21cd7f844f8176fec594b07ea, type: 3}
-    tropasAReclutar: 3
+    tropasAReclutar: 2
     tropasSonMilitares: 0
+    rolFormacion: 0
   - nombre: Gladiadores
     prefabEdificio: {fileID: 6088895961117913311, guid: d78c9823b69c35e4db5edce32e963c96, type: 3}
-    tropasAReclutar: 3
+    tropasAReclutar: 2
     tropasSonMilitares: 1
+    rolFormacion: 0
+  defenderLaBase: 1
+  radioDefensaBase: 22
+  radioLlamadaTropas: 60
+  retirarseSiPierde: 1
+  umbralRetirada: 0.4
+  comportamientoVariable: 1
+  variacionExpediciones: 1
+  variacionTropasAtacar: 1
+  variacionRitmo: 0.2
+  maderaExtraInicio: 0
+  piedraExtraInicio: 0
+  oroExtraInicio: 0
+  subirNivelAutomatico: 1
+  nivelObjetivo: 5
   segundosEntreDecisiones: 3
+  numeroExpediciones: 3
+  tropasPorExpedicion: 2
+  radioExpedicion: 25
+  minTropasParaAtacar: 4
+  rolCaballeros: 1
+  distanciaPreparacion: 12
+  separacionFilas: 3
+  espaciadoLateral: 1.5
+  ciclosParaCargar: 2
   radioConstruccionMin: 3
   radioConstruccion: 10
   cantidadEdificiosMaximos: 6
   distanciaEntreEdificios: 5
+  capaObstaculos:
+    serializedVersion: 2
+    m_Bits: 8
+  radioLibre: 2.5
+  correccionGradosY: 0
 --- !u!4 &4565320785486759960 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 84eace0e66a699941875a98fdc27e581, type: 3}

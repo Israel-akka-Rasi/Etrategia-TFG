@@ -81,7 +81,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 8fbf6cbc18c7b1340b7b5f5888a84b8f, type: 3}
       propertyPath: m_Name
-      value: building_market_red
+      value: Edificio_RecolectorOroEnemigo
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -157,11 +157,15 @@ MonoBehaviour:
   nombreEdificio: Gremio Comercial
   puntoSpawn: {fileID: 4449477669349613507}
   equipo: 0
+  nivelRequerido: 4
+  costeConstruccionMadera: 80
+  costeConstruccionPiedra: 30
+  costeConstruccionOro: 0
   prefabTropa: {fileID: 8302275368063891483, guid: ff520fadb76d3cb4a937351f1a5e6115, type: 3}
-  costeMadera: 20
-  costePiedra: 0
+  costeMadera: 25
+  costePiedra: 10
   costeOro: 0
-  modoPrueba: 1
+  modoPrueba: 0
 --- !u!4 &725037211104854473 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 8fbf6cbc18c7b1340b7b5f5888a84b8f, type: 3}

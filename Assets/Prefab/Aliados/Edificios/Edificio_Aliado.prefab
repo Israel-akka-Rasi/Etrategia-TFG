@@ -152,19 +152,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BaseMilitar
   equipo: 0
   nivelCastillo: 1
-  madera: 0
+  madera: 40
   piedra: 0
   oro: 0
   poblacionActual: 1
-  poblacionMaxima: 5
-  salud: 50
+  poblacionMaxima: 8
+  poblacionPorNivel: 2
+  salud: 2000
   barraSalud: {fileID: 0}
   puntoSpawn: {fileID: 5658263047682067279}
-  costeBaseMejora: 50
   "prefabLe\xF1ador": {fileID: 6471491849626687814, guid: eac07a27873f3f5468ecd61120fec54a, type: 3}
   "costeLe\xF1ador": 10
   prefabCaballero: {fileID: 6471491849626687814, guid: 4c4e8a7dc9fc10f4389b8328944c650d, type: 3}
-  costeCaballero: 10
+  costeCaballero: 12
+  nivelMaximo: 6
+  costeBaseMejora: 50
+  costePiedraMejora: 15
+  costeOroMejora: 10
 --- !u!65 &-5560493559147127057
 BoxCollider:
   m_ObjectHideFlags: 0

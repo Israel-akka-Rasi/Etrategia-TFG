@@ -18,6 +18,23 @@ public class GameManager : MonoBehaviour
 
     // La llama una base cuando es derrotada (su salud llega a 0).
     // equipoDerrotado = el equipo que ha PERDIDO.
+    // Final por tiempo agotado: no gana nadie
+    public void TerminarPartidaPorTiempo()
+    {
+        if (partidaTerminada) return;
+        partidaTerminada = true;
+
+        if (panelFinJuego != null) panelFinJuego.SetActive(true);
+
+        if (textoResultado != null)
+        {
+            textoResultado.text = "¡EMPATE!";
+            textoResultado.color = Color.yellow;
+        }
+
+        Time.timeScale = 0f;
+    }
+
     public void TerminarPartida(int equipoDerrotado)
     {
         if (partidaTerminada) return; // el final de esta partida ya se gestionó

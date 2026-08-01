@@ -81,7 +81,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 5becf6aed24775f4fa463487c8d0a355, type: 3}
       propertyPath: m_Name
-      value: building_blacksmith_red
+      value: Edificio_MineroEnemigo
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -157,11 +157,15 @@ MonoBehaviour:
   nombreEdificio: Campamento Minero
   puntoSpawn: {fileID: 1882309081713915547}
   equipo: 0
+  nivelRequerido: 2
+  costeConstruccionMadera: 40
+  costeConstruccionPiedra: 0
+  costeConstruccionOro: 0
   prefabTropa: {fileID: 8302275368063891483, guid: 1fa00d577d499f5468974aeb82353abc, type: 3}
-  costeMadera: 20
+  costeMadera: 15
   costePiedra: 0
   costeOro: 0
-  modoPrueba: 1
+  modoPrueba: 0
 --- !u!4 &7843430629768653548 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 5becf6aed24775f4fa463487c8d0a355, type: 3}

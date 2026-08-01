@@ -125,5 +125,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Recurso
   tipo: 0
-  reservaHabilitada: 1000
-  cantidadPorTanda: 500
+  reservaHabilitada: 50
+  cantidadPorTanda: 2

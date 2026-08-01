@@ -165,7 +165,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EdificioReclutamiento
   nombreEdificio: Campamento Minero
   puntoSpawn: {fileID: 840678721804296821}
+  equipo: 0
+  nivelRequerido: 2
+  costeConstruccionMadera: 40
+  costeConstruccionPiedra: 0
+  costeConstruccionOro: 0
   prefabTropa: {fileID: 6471491849626687814, guid: 4d6f935a73473204fa3f7712192113ab, type: 3}
-  costeMadera: 0
+  costeMadera: 15
   costePiedra: 0
   costeOro: 0
+  modoPrueba: 0

@@ -176,7 +176,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EdificioReclutamiento
   nombreEdificio: Coliseo
   puntoSpawn: {fileID: 7940484165733265007}
+  equipo: 0
+  nivelRequerido: 5
+  costeConstruccionMadera: 100
+  costeConstruccionPiedra: 50
+  costeConstruccionOro: 20
   prefabTropa: {fileID: 6471491849626687814, guid: 0cd3d864d7e8b6a4d9d0fc530fbb21cf, type: 3}
-  costeMadera: 20
-  costePiedra: 0
-  costeOro: 0
+  costeMadera: 30
+  costePiedra: 15
+  costeOro: 5
+  modoPrueba: 0

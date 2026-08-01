@@ -167,14 +167,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01a7902d0aec8c04ebd8a6050d6fcfc6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EdificioReclutamiento
-  nombreEdificio: Campamento Minero
+  nombreEdificio: Coliseo
   puntoSpawn: {fileID: 398639786944394563}
   equipo: 0
+  nivelRequerido: 5
+  costeConstruccionMadera: 100
+  costeConstruccionPiedra: 50
+  costeConstruccionOro: 20
   prefabTropa: {fileID: 8302275368063891483, guid: a43d7f2f97251494a8c75ec43cd22e45, type: 3}
-  costeMadera: 20
-  costePiedra: 0
-  costeOro: 0
-  modoPrueba: 1
+  costeMadera: 30
+  costePiedra: 15
+  costeOro: 10
+  modoPrueba: 0
 --- !u!4 &6902833167255612005 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: b0554f8ab3c0a964ab623cb336bcf8dd, type: 3}

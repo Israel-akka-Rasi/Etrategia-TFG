@@ -84,8 +84,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Recurso
   tipo: 1
-  reservaHabilitada: 10000
-  cantidadPorTanda: 2000
+  reservaHabilitada: 120
+  cantidadPorTanda: 2
 --- !u!65 &3614615296275787050
 BoxCollider:
   m_ObjectHideFlags: 0

@@ -14,6 +14,10 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI txtPiedra;
     public TextMeshProUGUI txtOro;
 
+    [Header("Coste de Mejora del Castillo")]
+    public TextMeshProUGUI txtCosteMejora; // Muestra lo que cuesta subir al siguiente nivel
+    public Button botonMejorarCastillo;    // Se desactiva si no llegan los recursos
+
     [Header("Panel de Selección")]
     public GameObject panelSeleccion;
     public TextMeshProUGUI txtNombreUnidad;
@@ -121,6 +125,45 @@ public class UIManager : MonoBehaviour
         txtMadera.text = "Madera: " + madera;
         txtPiedra.text = "Piedra: " + piedra;
         txtOro.text = "Oro: " + oro;
+
+        ActualizarCosteMejora();
+    }
+
+    // Muestra cuánto cuesta el siguiente nivel y marca en rojo lo que falta
+    private void ActualizarCosteMejora()
+    {
+        BaseMilitar castillo = ObtenerBaseJugador();
+        if (castillo == null) return;
+
+        bool esMaximo = castillo.nivelCastillo >= castillo.nivelMaximo;
+
+        if (txtCosteMejora != null)
+        {
+            if (esMaximo)
+            {
+                txtCosteMejora.text = "Nivel máximo";
+                txtCosteMejora.color = Color.white;
+            }
+            else
+            {
+                int m, p, o;
+                castillo.CosteSiguienteNivel(out m, out p, out o);
+
+                // Solo mostramos los recursos que de verdad hacen falta
+                string linea = "Mejora: ";
+                if (m > 0) linea += $"M {castillo.madera}/{m}  ";
+                if (p > 0) linea += $"P {castillo.piedra}/{p}  ";
+                if (o > 0) linea += $"O {castillo.oro}/{o}";
+
+                txtCosteMejora.text = linea.TrimEnd();
+                txtCosteMejora.color = castillo.PuedeMejorar() ? Color.white : Color.red;
+            }
+        }
+
+        if (botonMejorarCastillo != null)
+        {
+            botonMejorarCastillo.interactable = !esMaximo && castillo.PuedeMejorar();
+        }
     }
 
     public void MostrarInfoTropa(Tropa tropa, int ataque)
@@ -178,20 +221,53 @@ public class UIManager : MonoBehaviour
             else if (edificio.nombreEdificio == "Coliseo") contColiseos++;
         }
 
-        // MODO PRUEBA: no comprobamos el nivel del castillo, solo el límite por tipo.
-        ConfigurarBotonConstruccion(botonConstruirCampamento, textoLimiteCampamento, "Campamento", contCampamentos);
-        ConfigurarBotonConstruccion(botonConstruirGaleria, textoLimiteGaleria, "Arquería", contGalerias);
-        ConfigurarBotonConstruccion(botonConstruirGremio, textoLimiteGremio, "Gremio", contGremios);
-        ConfigurarBotonConstruccion(botonConstruirColiseo, textoLimiteColiseo, "Coliseo", contColiseos);
+        // Ahora sí: se comprueba límite, NIVEL de castillo y RECURSOS.
+        ConfigurarBotonConstruccion(botonConstruirCampamento, textoLimiteCampamento, "Campamento", contCampamentos, prefabCampamentoMineroReal);
+        ConfigurarBotonConstruccion(botonConstruirGaleria, textoLimiteGaleria, "Arquería", contGalerias, prefabGaleriaTiroReal);
+        ConfigurarBotonConstruccion(botonConstruirGremio, textoLimiteGremio, "Gremio", contGremios, prefabGremioComercialReal);
+        ConfigurarBotonConstruccion(botonConstruirColiseo, textoLimiteColiseo, "Coliseo", contColiseos, prefabColiseoReal);
     }
 
-    private void ConfigurarBotonConstruccion(Button boton, TextMeshProUGUI texto, string nombre, int cantidad)
+    private void ConfigurarBotonConstruccion(Button boton, TextMeshProUGUI texto, string nombre, int cantidad, GameObject prefabReal)
     {
         if (boton == null || texto == null) return;
 
-        texto.text = $"{nombre} ({cantidad}/{limiteEdificios}) [TEST]";
-        texto.color = Color.yellow;
-        boton.interactable = (cantidad < limiteEdificios);
+        EdificioReclutamiento datos = EdificioReclutamiento.DatosDePrefab(prefabReal);
+        BaseMilitar castillo = ObtenerBaseJugador();
+
+        // Sin datos o sin castillo no podemos evaluar nada
+        if (datos == null || castillo == null)
+        {
+            texto.text = $"{nombre} (?)";
+            texto.color = Color.gray;
+            boton.interactable = false;
+            return;
+        }
+
+        bool limiteOk = cantidad < limiteEdificios;
+        bool nivelOk = castillo.nivelCastillo >= datos.nivelRequerido;
+        bool recursosOk = castillo.madera >= datos.costeConstruccionMadera
+                       && castillo.piedra >= datos.costeConstruccionPiedra
+                       && castillo.oro >= datos.costeConstruccionOro;
+
+        // El texto explica por qué no se puede, que es lo útil para el jugador
+        if (!nivelOk)
+        {
+            texto.text = $"{nombre} — Nivel {datos.nivelRequerido}";
+            texto.color = Color.red;
+        }
+        else if (!limiteOk)
+        {
+            texto.text = $"{nombre} ({cantidad}/{limiteEdificios}) — Límite";
+            texto.color = Color.gray;
+        }
+        else
+        {
+            texto.text = $"{nombre} ({cantidad}/{limiteEdificios})  M:{datos.costeConstruccionMadera} P:{datos.costeConstruccionPiedra} O:{datos.costeConstruccionOro}";
+            texto.color = recursosOk ? Color.white : Color.red;
+        }
+
+        boton.interactable = limiteOk && nivelOk && recursosOk;
     }
 
     public void CerrarPanelConstruccion()
@@ -200,29 +276,38 @@ public class UIManager : MonoBehaviour
         if (panelReclutamiento != null) panelReclutamiento.SetActive(true);
     }
 
-    // --- MODO PRUEBA: EDIFICIOS GRATIS ---
+    // --- CONSTRUCCIÓN (el panel solo se cierra si de verdad se pudo empezar) ---
     public void BotonConstruirCampamentoMinero()
     {
-        sistemaConstruccion.EmpezarConstruccion(hologramaCampamentoMinero, prefabCampamentoMineroReal);
-        CerrarPanelConstruccion();
+        if (sistemaConstruccion.EmpezarConstruccion(hologramaCampamentoMinero, prefabCampamentoMineroReal))
+            CerrarPanelConstruccion();
     }
 
     public void BotonConstruirGaleriaDeTiro()
     {
-        sistemaConstruccion.EmpezarConstruccion(hologramaGaleriaTiro, prefabGaleriaTiroReal);
-        CerrarPanelConstruccion();
+        if (sistemaConstruccion.EmpezarConstruccion(hologramaGaleriaTiro, prefabGaleriaTiroReal))
+            CerrarPanelConstruccion();
     }
 
     public void BotonConstruirGremioComercial()
     {
-        sistemaConstruccion.EmpezarConstruccion(hologramaGremioComercial, prefabGremioComercialReal);
-        CerrarPanelConstruccion();
+        if (sistemaConstruccion.EmpezarConstruccion(hologramaGremioComercial, prefabGremioComercialReal))
+            CerrarPanelConstruccion();
     }
 
     public void BotonConstruirColiseo()
     {
-        sistemaConstruccion.EmpezarConstruccion(hologramaColiseo, prefabColiseoReal);
-        CerrarPanelConstruccion();
+        if (sistemaConstruccion.EmpezarConstruccion(hologramaColiseo, prefabColiseoReal))
+            CerrarPanelConstruccion();
+    }
+
+    // Cierra TODOS los menús de golpe (castillo, construcción y edificios).
+    // Lo llama Movimiento al hacer clic fuera, para que nunca se solapen paneles.
+    public void CerrarTodosLosPaneles()
+    {
+        if (panelReclutamiento != null) panelReclutamiento.SetActive(false);
+        if (panelConstruccion != null) panelConstruccion.SetActive(false);
+        CerrarMenuEdificio();
     }
 
     // --- INTERFAZ CONTEXTUAL DE EDIFICIOS SELECCIONADOS ---

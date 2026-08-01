@@ -10,6 +10,14 @@ public class EdificioReclutamiento : MonoBehaviour
     // 0 = jugador, 1 = IA. La IA lo pone a 1 al construirlo (con AsignarCastillo).
     public int equipo = 0;
 
+    [Header("Coste de CONSTRUIR este edificio")]
+    // Nivel de castillo necesario para desbloquearlo y precio de levantarlo.
+    // Lo leen tanto el jugador (SistemaConstruccion) como la IA: una sola configuración.
+    public int nivelRequerido = 1;
+    public int costeConstruccionMadera = 40;
+    public int costeConstruccionPiedra = 0;
+    public int costeConstruccionOro = 0;
+
     [Header("Configuración de la Tropa")]
     public GameObject prefabTropa;
     public int costeMadera = 20;
@@ -52,6 +60,66 @@ public class EdificioReclutamiento : MonoBehaviour
                 }
             }
         }
+    }
+
+    // ====================================================================
+    // COSTE DE CONSTRUCCIÓN (compartido por el jugador y la IA)
+    // Los datos viven en el prefab del edificio, así solo se configuran
+    // en un sitio y ambos bandos juegan con las mismas reglas.
+    // ====================================================================
+
+    // Lee los datos de construcción del PREFAB (sin instanciarlo).
+    public static EdificioReclutamiento DatosDePrefab(GameObject prefabEdificio)
+    {
+        if (prefabEdificio == null) return null;
+
+        // Puede estar en la raíz o en un hijo del prefab
+        EdificioReclutamiento datos = prefabEdificio.GetComponent<EdificioReclutamiento>();
+        if (datos == null) datos = prefabEdificio.GetComponentInChildren<EdificioReclutamiento>(true);
+
+        if (datos == null)
+            Debug.LogWarning($"'{prefabEdificio.name}' no tiene el componente EdificioReclutamiento: se construiría GRATIS.");
+
+        return datos;
+    }
+
+    // ¿Este castillo tiene nivel y recursos para levantar este edificio?
+    // 'motivo' explica el fallo (para logs y para la interfaz).
+    public bool PuedeConstruirlo(BaseMilitar castillo, out string motivo)
+    {
+        if (castillo == null)
+        {
+            motivo = "Sin castillo";
+            return false;
+        }
+
+        if (castillo.nivelCastillo < nivelRequerido)
+        {
+            motivo = $"Requiere castillo nivel {nivelRequerido}";
+            return false;
+        }
+
+        if (castillo.madera < costeConstruccionMadera
+         || castillo.piedra < costeConstruccionPiedra
+         || castillo.oro < costeConstruccionOro)
+        {
+            motivo = $"Faltan recursos (M:{costeConstruccionMadera} P:{costeConstruccionPiedra} O:{costeConstruccionOro})";
+            return false;
+        }
+
+        motivo = "";
+        return true;
+    }
+
+    // Descuenta el precio del edificio del castillo dueño.
+    public void CobrarConstruccion(BaseMilitar castillo)
+    {
+        if (castillo == null) return;
+
+        castillo.madera -= costeConstruccionMadera;
+        castillo.piedra -= costeConstruccionPiedra;
+        castillo.oro -= costeConstruccionOro;
+        castillo.ActualizarTextosUI();
     }
 
     // --- FUNCIÓN DE COMPRA --- (ahora devuelve la tropa creada, o null)
@@ -99,17 +167,7 @@ public class EdificioReclutamiento : MonoBehaviour
         return nuevaTropa;
     }
 
-    // --- DETECCIÓN DE CLIC DEL RATÓN ---
-    private void OnMouseDown()
-    {
-        // El jugador solo puede abrir el menú de SUS edificios (equipo 0).
-        if (equipo != 0) return;
-
-        Debug.Log("Has hecho clic en: " + nombreEdificio);
-
-        if (UIManager.Instancia != null)
-        {
-            UIManager.Instancia.AbrirMenuEdificio(this);
-        }
-    }
+    // NOTA: el clic sobre el edificio ya NO se detecta aquí con OnMouseDown.
+    // Lo gestiona Movimiento.cs con su raycast, porque OnMouseDown se ejecuta
+    // ANTES que Update y el panel se abría justo antes de que el clic lo cerrara.
 }

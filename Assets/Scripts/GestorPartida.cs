@@ -16,10 +16,23 @@ public class GestorPartida : MonoBehaviour
     // Al reiniciar lo vaciamos de golpe. Mantenlo en posición (0,0,0) y escala 1.
     public Transform contenedorDinamico;
 
+    [Header("Límite de Episodio (entrenamiento)")]
+    // Ninguna partida puede durar para siempre. Si se agota el tiempo, se declara
+    // empate y se reinicia. Es imprescindible al entrenar: un agente que aún no
+    // sabe atacar dejaría el episodio colgado indefinidamente.
+    public bool limitarDuracion = true;
+    public float segundosMaximosPartida = 420f; // 7 minutos de tiempo de juego
+
     [Header("Pruebas")]
     public KeyCode teclaReinicio = KeyCode.R; // Para disparar el reinicio a mano y comprobarlo
 
     private int episodios = 0; // Cuántas partidas se han jugado (útil luego para el entrenamiento)
+    private float tiempoPartida = 0f;
+
+    // TRUE mientras se está reiniciando. Las tropas destruidas durante el reinicio
+    // NO deben descontar población, porque las bases ya la han restaurado a su valor
+    // inicial (Destroy() de Unity se resuelve al final del frame, no al instante).
+    public bool EstaReiniciando { get; private set; }
 
     void Awake()
     {
@@ -34,12 +47,42 @@ public class GestorPartida : MonoBehaviour
         {
             ReiniciarPartida();
         }
+
+        VigilarDuracion();
+    }
+
+    // Si la partida se eterniza (nadie ataca, ambos atascados), se corta en empate.
+    void VigilarDuracion()
+    {
+        if (!limitarDuracion) return;
+        if (Time.timeScale == 0f) return; // partida ya terminada y pausada
+
+        tiempoPartida += Time.deltaTime;
+
+        if (tiempoPartida >= segundosMaximosPartida)
+        {
+            Debug.LogWarning($"GestorPartida: tiempo agotado ({segundosMaximosPartida}s). EMPATE, reiniciando.");
+            tiempoPartida = 0f;
+
+            if (modoEntrenamiento)
+            {
+                ReiniciarPartida();
+            }
+            else
+            {
+                GameManager gm = FindObjectOfType<GameManager>();
+                if (gm != null) gm.TerminarPartidaPorTiempo();
+            }
+        }
     }
 
     public void ReiniciarPartida()
     {
         episodios++;
         Debug.Log($"GestorPartida: reiniciando partida (episodio {episodios})...");
+
+        EstaReiniciando = true;
+        tiempoPartida = 0f;
 
         // Si veníamos de un fin de partida pausado, reanudamos el tiempo
         if (Time.timeScale == 0f) Time.timeScale = 1f;
@@ -93,5 +136,15 @@ public class GestorPartida : MonoBehaviour
         {
             c.ReiniciarComandante();
         }
+
+        // Las destrucciones pendientes se resuelven al final del frame; hasta entonces
+        // mantenemos la bandera para que no descuenten población de la partida nueva.
+        StartCoroutine(TerminarReinicio());
+    }
+
+    private System.Collections.IEnumerator TerminarReinicio()
+    {
+        yield return new WaitForEndOfFrame();
+        EstaReiniciando = false;
     }
 }

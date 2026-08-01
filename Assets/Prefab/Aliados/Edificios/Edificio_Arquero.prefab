@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2367536872733836451}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: PuntoSpawn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -82,6 +82,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 0d1593d1d9c1e56408ef2ecf0d7e44ae, type: 3}
       propertyPath: m_Name
       value: Edificio_Arquero
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 0d1593d1d9c1e56408ef2ecf0d7e44ae, type: 3}
+      propertyPath: m_Layer
+      value: 3
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -161,7 +165,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EdificioReclutamiento
   nombreEdificio: Galeria de Tiro
   puntoSpawn: {fileID: 2367536872733836451}
+  equipo: 0
+  nivelRequerido: 3
+  costeConstruccionMadera: 60
+  costeConstruccionPiedra: 15
+  costeConstruccionOro: 0
   prefabTropa: {fileID: 6471491849626687814, guid: 2bf0f00dada41aa45b5b8f0019474905, type: 3}
   costeMadera: 20
-  costePiedra: 0
+  costePiedra: 5
   costeOro: 0
+  modoPrueba: 0

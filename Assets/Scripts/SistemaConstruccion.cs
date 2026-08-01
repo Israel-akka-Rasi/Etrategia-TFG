@@ -1,16 +1,16 @@
 using UnityEngine;
-using System.Collections.Generic; // Necesario para usar List
+using System.Collections.Generic;
 
 public class SistemaConstruccion : MonoBehaviour
 {
     [Header("Referencias Principales")]
     public Transform castilloCentro;
-    public float radioConstruccion = 15f; 
-    public LayerMask capaSuelo; 
+    public float radioConstruccion = 15f;
+    public LayerMask capaSuelo;
 
     [Header("Materiales del Holograma")]
-    public Material matValido; 
-    public Material matInvalido; 
+    public Material matValido;
+    public Material matInvalido;
 
     [Header("Sistema de Colisiones")]
     public LayerMask capaObstaculos;
@@ -18,23 +18,51 @@ public class SistemaConstruccion : MonoBehaviour
 
     private GameObject hologramaActual;
     private GameObject prefabRealActual;
-    private List<MeshRenderer> renderersHolograma = new List<MeshRenderer>(); // Cambiado a List
+    private BaseMilitar castilloJugador; // El "banco" del que se cobra
+    private List<MeshRenderer> renderersHolograma = new List<MeshRenderer>();
 
-    public void EmpezarConstruccion(GameObject prefabHolograma, GameObject prefabReal)
+    // Busca (y cachea) el castillo del jugador en el mapa generado
+    private BaseMilitar BuscarCastilloJugador()
     {
-        // --- NUEVO: Autodetectar el castillo del jugador en el mapa generado ---
-        if (castilloCentro == null)
+        if (castilloJugador != null) return castilloJugador;
+
+        BaseMilitar[] todasLasBases = FindObjectsOfType<BaseMilitar>();
+        foreach (BaseMilitar b in todasLasBases)
         {
-            BaseMilitar[] todasLasBases = FindObjectsOfType<BaseMilitar>();
-            foreach (BaseMilitar b in todasLasBases)
+            if (b.equipo == 0)
             {
-                // Buscamos la base del Equipo 0 (Tu castillo azul)
-                if (b.equipo == 0) 
-                { 
-                    castilloCentro = b.transform; 
-                    break; 
-                }
+                castilloJugador = b;
+                if (castilloCentro == null) castilloCentro = b.transform;
+                break;
             }
+        }
+        return castilloJugador;
+    }
+
+    // Devuelve true si se ha podido empezar la construcción.
+    // Comprueba NIVEL de castillo y RECURSOS antes de sacar el holograma.
+    public bool EmpezarConstruccion(GameObject prefabHolograma, GameObject prefabReal)
+    {
+        BaseMilitar castillo = BuscarCastilloJugador();
+        if (castillo == null)
+        {
+            Debug.LogWarning("SistemaConstruccion: no encuentro el castillo del jugador.");
+            return false;
+        }
+
+        // El nivel requerido y el precio están en el prefab del edificio
+        EdificioReclutamiento datos = EdificioReclutamiento.DatosDePrefab(prefabReal);
+        if (datos == null)
+        {
+            Debug.LogWarning("SistemaConstruccion: el prefab no tiene EdificioReclutamiento.");
+            return false;
+        }
+
+        string motivo;
+        if (!datos.PuedeConstruirlo(castillo, out motivo))
+        {
+            Debug.Log($"No puedes construir '{datos.nombreEdificio}': {motivo}");
+            return false;
         }
 
         if (hologramaActual != null) Destroy(hologramaActual);
@@ -44,20 +72,22 @@ public class SistemaConstruccion : MonoBehaviour
 
         renderersHolograma.Clear();
         renderersHolograma.AddRange(hologramaActual.GetComponentsInChildren<MeshRenderer>());
-        
+
         MeshRenderer rendererPadre = hologramaActual.GetComponent<MeshRenderer>();
         if (rendererPadre != null && !renderersHolograma.Contains(rendererPadre))
         {
             renderersHolograma.Add(rendererPadre);
         }
+
+        return true;
     }
 
     void Update()
     {
-        if (hologramaActual == null) return; 
+        if (hologramaActual == null) return;
 
         Ray rayo = Camera.main.ScreenPointToRay(Input.mousePosition);
-        
+
         if (Physics.Raycast(rayo, out RaycastHit hit, 100f, capaSuelo))
         {
             hologramaActual.transform.position = hit.point;
@@ -66,20 +96,17 @@ public class SistemaConstruccion : MonoBehaviour
             float distancia = Vector3.Distance(hit.point, castilloCentro.position);
             bool dentroDelTerritorio = distancia <= radioConstruccion;
 
-            // 2. ¿Está el terreno despejado? (Lanzamos una esfera invisible un poco por encima del suelo)
-            Vector3 centroEsfera = hit.point + Vector3.up; 
+            // 2. ¿Está el terreno despejado?
+            Vector3 centroEsfera = hit.point + Vector3.up;
             bool areaDespejada = !Physics.CheckSphere(centroEsfera, radioColision, capaObstaculos);
 
-            // 3. Solo es válido si cumple AMBAS cosas
             bool esValido = dentroDelTerritorio && areaDespejada;
 
             CambiarColorHolograma(esValido ? matValido : matInvalido);
 
             if (Input.GetMouseButtonDown(0) && esValido)
             {
-                Instantiate(prefabRealActual, hit.point, Quaternion.identity);
-                Destroy(hologramaActual);
-                hologramaActual = null; 
+                ColocarEdificio(hit.point);
             }
         }
 
@@ -88,6 +115,53 @@ public class SistemaConstruccion : MonoBehaviour
             Destroy(hologramaActual);
             hologramaActual = null;
         }
+    }
+
+    // Instancia el edificio y COBRA su precio al castillo
+    private void ColocarEdificio(Vector3 posicion)
+    {
+        BaseMilitar castillo = BuscarCastilloJugador();
+        EdificioReclutamiento datos = EdificioReclutamiento.DatosDePrefab(prefabRealActual);
+
+        // Revalidamos por si hemos gastado los recursos mientras colocábamos
+        string motivo;
+        if (datos != null && !datos.PuedeConstruirlo(castillo, out motivo))
+        {
+            Debug.Log($"Ya no puedes construir '{datos.nombreEdificio}': {motivo}");
+            Destroy(hologramaActual);
+            hologramaActual = null;
+            return;
+        }
+
+        GameObject nuevoEdificio = Instantiate(prefabRealActual, posicion, Quaternion.identity);
+
+        // Lo metemos en el contenedor dinámico para que se limpie al reiniciar episodio
+        if (GestorPartida.Instancia != null && GestorPartida.Instancia.contenedorDinamico != null)
+        {
+            nuevoEdificio.transform.SetParent(GestorPartida.Instancia.contenedorDinamico);
+        }
+
+        // Cobramos el precio
+        EdificioReclutamiento edificio = nuevoEdificio.GetComponent<EdificioReclutamiento>();
+        if (edificio == null) edificio = nuevoEdificio.GetComponentInChildren<EdificioReclutamiento>(true);
+
+        if (edificio != null)
+        {
+            edificio.equipo = 0; // Es del jugador
+
+            int antesM = castillo.madera, antesP = castillo.piedra, antesO = castillo.oro;
+            edificio.CobrarConstruccion(castillo);
+
+            Debug.Log($"Construido '{edificio.nombreEdificio}' | Precio M:{edificio.costeConstruccionMadera} P:{edificio.costeConstruccionPiedra} O:{edificio.costeConstruccionOro}"
+                    + $" | Madera {antesM}->{castillo.madera}, Piedra {antesP}->{castillo.piedra}, Oro {antesO}->{castillo.oro}");
+        }
+        else
+        {
+            Debug.LogWarning("¡Edificio construido SIN cobrar! No tiene componente EdificioReclutamiento.");
+        }
+
+        Destroy(hologramaActual);
+        hologramaActual = null;
     }
 
     private void CambiarColorHolograma(Material nuevoMaterial)

@@ -40,6 +40,8 @@ void Update()
         {
             Tropa tropaTocada = impacto.collider.GetComponent<Tropa>();
             BaseMilitar baseTocada = impacto.collider.GetComponent<BaseMilitar>();
+            // El collider puede estar en un hijo del edificio, por eso InParent
+            EdificioReclutamiento edificioTocado = impacto.collider.GetComponentInParent<EdificioReclutamiento>();
 
             if (tropaTocada != null && tropaTocada.equipo == 0)
             {
@@ -49,11 +51,11 @@ void Update()
                 arrastrando = false; 
                 if (cajaVisual != null) cajaVisual.gameObject.SetActive(false);
 
+                // Las unidades sin script de Combate (recolectores) también deben
+                // mostrar su ficha: simplemente aparecen con 0 de daño.
                 Combate scriptCombate = impacto.collider.GetComponent<Combate>();
-                if (scriptCombate != null)
-                {
-                    UIManager.Instancia.MostrarInfoTropa(tropaTocada, (int)scriptCombate.dano);
-                }
+                int danoUnidad = (scriptCombate != null) ? scriptCombate.dano : 0;
+                UIManager.Instancia.MostrarInfoTropa(tropaTocada, danoUnidad);
             }
             else if (baseTocada != null)
             {
@@ -62,6 +64,16 @@ void Update()
                 {
                     UIManager.Instancia.MostrarPanelReclutamiento(true,baseTocada.nivelCastillo);
                 }
+                arrastrando = false;
+                if (cajaVisual != null) cajaVisual.gameObject.SetActive(false);
+            }
+            else if (edificioTocado != null && edificioTocado.equipo == 0)
+            {
+                // Clic en uno de NUESTROS edificios: abrimos su menú.
+                // Se hace aquí (y no en OnMouseDown) porque DeseleccionarTodo ya ha
+                // cerrado el resto de paneles justo antes, así que nunca se solapan.
+                UIManager.Instancia.AbrirMenuEdificio(edificioTocado);
+
                 arrastrando = false;
                 if (cajaVisual != null) cajaVisual.gameObject.SetActive(false);
             }
@@ -107,6 +119,26 @@ void Update()
             Vector3 destinoCentral = impacto.point;
 
             float radioDeLlegada = 0.5f + (Mathf.Sqrt(tropasSeleccionadas.Count) * 0.4f); 
+
+            // --- MARCHA EN GRUPO ---
+            // Todas las unidades seleccionadas van al ritmo de la MÁS LENTA, para que
+            // el grupo llegue junto y no se estire por el camino. Cada una recupera su
+            // velocidad propia al terminar el desplazamiento (lo hace Tropa).
+            float velocidadGrupo = Mathf.Infinity;
+            foreach (Tropa s in tropasSeleccionadas)
+            {
+                if (s == null) continue;
+                float v = s.VelocidadOriginal();
+                if (v > 0f && v < velocidadGrupo) velocidadGrupo = v;
+            }
+
+            if (velocidadGrupo < Mathf.Infinity)
+            {
+                foreach (Tropa s in tropasSeleccionadas)
+                {
+                    if (s != null) s.FijarVelocidadGrupo(velocidadGrupo);
+                }
+            }
 
             foreach (Tropa soldado in tropasSeleccionadas)
             {
@@ -179,7 +211,7 @@ void Update()
         if (UIManager.Instancia != null)
         {
             UIManager.Instancia.OcultarPanelSeleccion();
-            UIManager.Instancia.MostrarPanelReclutamiento(false,0);
+            UIManager.Instancia.CerrarTodosLosPaneles();
         }
     }
 
