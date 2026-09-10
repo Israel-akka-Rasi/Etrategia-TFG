@@ -185,7 +185,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Tropa
   equipo: 1
-  salud: 3
+  salud: 40
   saludMaxima: 0
   indicadorSeleccion: {fileID: 3958893920667035442}
   barraSalud: {fileID: 8745680620816122606}
@@ -206,6 +206,8 @@ MonoBehaviour:
   rangoAtaque: 1.5
   tiempoEntreAtaques: 1
   radioVision: 5
+  intervaloRecalculo: 0.25
+  umbralMovimientoObjetivo: 1
 --- !u!114 &-6739996359428242817
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -219,10 +221,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RecolectorIA
   tipoRecurso: 2
-  tiempoRecoleccion: 2
+  tiempoRecoleccion: 7.5
   capacidadCarga: 10
   radioBusquedaNavMesh: 3
-  bonoDificultad: 1.2
+  bonoDificultad: 1
 --- !u!1001 &2367925161126724867
 PrefabInstance:
   m_ObjectHideFlags: 0

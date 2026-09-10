@@ -68,6 +68,13 @@ public class IAEnemiga : MonoBehaviour
     // El orden de la lista es el orden en que los construye (de arriba a abajo).
     public List<PlanEdificio> planConstruccion = new List<PlanEdificio>();
 
+    [Header("Guarnición (anti-rush)")]
+    // Caballeros que la IA mantiene desde el PRINCIPIO para no estar indefensa.
+    // NO son tropas extra: se descuentan de 'cantidadCaballeros', así que solo
+    // adelanta parte de su ejército. Sin esto, atacarla pronto gana siempre,
+    // y un agente entrenado descubriría ese atajo y no aprendería nada más.
+    public int guarnicionMinima = 2;
+
     [Header("Reacción: Defensa de la Base")]
     // Si detecta enemigos cerca de casa, abandona lo que esté haciendo y vuelve a defender.
     public bool defenderLaBase = true;
@@ -95,6 +102,8 @@ public class IAEnemiga : MonoBehaviour
     // Pase lo que pase, a partir de este momento ataca con lo que tenga.
     // Garantiza que la partida SIEMPRE se resuelve y nunca hay tablas eternas.
     public float segundosHastaAtaqueForzoso = 240f;
+    // Si el asalto forzoso fracasa y rehace ejército, vuelve a lanzarse pasado este tiempo
+    public float segundosEntreAtaquesForzosos = 60f;
 
     [Header("Dificultad (0 = igualdad total con el jugador)")]
     // Palanca única para calibrar al rival durante el entrenamiento.
@@ -106,7 +115,7 @@ public class IAEnemiga : MonoBehaviour
 
     [Header("Subida de Nivel")]
     public bool subirNivelAutomatico = true; // La IA mejora su castillo para ampliar población y desbloquear edificios
-    public int nivelObjetivo = 6;            // Nivel al que la IA intenta llegar de forma PRIORITARIA (6 = población 15)
+    public int nivelObjetivo = 5;            // Nivel objetivo (con población base 8: nivel 5 = 16 huecos)
 
     [Header("Tiempos")]
     public float segundosEntreDecisiones = 3f; // Bajo para pruebas (sube a 10-15 en la versión final)
@@ -171,6 +180,7 @@ public class IAEnemiga : MonoBehaviour
     private FaseEstrategia faseRegistrada;
     private int ciclosEnFase = 0;
     private float tiempoDePartida = 0f;
+    private float proximoAtaqueForzoso = 240f;
     private float intervaloReal = 3f; // el ritmo realmente usado (con su variación)
 
     // Reacción: defensa y retirada
@@ -286,7 +296,11 @@ public class IAEnemiga : MonoBehaviour
         // Se hace en TODAS las fases, no solo en la que los creó.
         if (ReponerBajas()) return;
 
-        // PRIORIDAD 3: invertir en subir de nivel hacia el objetivo (si puede pagarlo).
+        // PRIORIDAD 3: mantener la guarnición mínima. Desde el primer minuto tiene
+        // un par de caballeros en casa, así que atacarla pronto ya no es gratis.
+        if (GestionarGuarnicion()) return;
+
+        // PRIORIDAD 4: invertir en subir de nivel hacia el objetivo (si puede pagarlo).
         // Esto hace crecer su población y le desbloquea edificios, como a un jugador.
         GestionarSubidaNivel();
 
@@ -357,6 +371,26 @@ public class IAEnemiga : MonoBehaviour
         misCaballeros.Add(g);
         if (misCaballeros.Count > picoCaballeros) picoCaballeros = misCaballeros.Count;
         miEjercito.Add(new MiembroEjercito(g, rolCaballeros));
+    }
+
+    // Mantiene la guarnición mínima desde el primer minuto de partida.
+    // Devuelve true si ha gastado el ciclo en reclutar un guardia.
+    bool GestionarGuarnicion()
+    {
+        if (guarnicionMinima <= 0) return false;
+
+        // Nunca más guardias que el total de caballeros previsto
+        int objetivo = Mathf.Min(guarnicionMinima, cantidadCaballeros);
+        if (CaballerosVivos() >= objetivo) return false;
+
+        if (!HayHuecoPoblacion()) return false;
+
+        GameObject guardia = miBase.ComprarCaballero();
+        if (guardia == null) return false; // no le llega: seguirá con lo suyo
+
+        RegistrarCaballero(guardia);
+        Debug.Log($"IAEnemiga: guardia de la base reclutado ({CaballerosVivos()}/{objetivo}).");
+        return true;
     }
 
     // Repone UNA baja por ciclo, con prioridad económica (sin madera no hay nada).
@@ -457,23 +491,38 @@ public class IAEnemiga : MonoBehaviour
     void GestionarBloqueos()
     {
         // --- Ataque forzoso por tiempo ---
-        if (tiempoDePartida >= segundosHastaAtaqueForzoso && faseActual != FaseEstrategia.Asedio)
+        // Se repite cada cierto tiempo: si tras un asalto fallido rehace el ejército,
+        // volverá a lanzarse en vez de quedarse preparándose indefinidamente.
+        if (tiempoDePartida >= proximoAtaqueForzoso && faseActual != FaseEstrategia.Asedio)
         {
             Debug.LogWarning($"IAEnemiga: se acabó el tiempo de preparación. ¡ATAQUE FORZOSO con {miEjercito.Count} unidades!");
             faseActual = FaseEstrategia.Asedio;
+            proximoAtaqueForzoso = tiempoDePartida + segundosEntreAtaquesForzosos;
             ciclosEnFase = 0;
             return;
         }
 
-        // --- Si estamos en Asedio sin ejército, a rehacerlo ---
+        // --- En Asedio ---
         if (faseActual == FaseEstrategia.Asedio)
         {
             miEjercito.RemoveAll(m => m.objeto == null);
-            if (miEjercito.Count == 0 && tiempoDePartida < segundosHastaAtaqueForzoso)
+
+            // Sin ejército no se asedia nada: a rehacerlo SIEMPRE (antes esto solo
+            // valía antes del ataque forzoso, y después se quedaba muerta de pie).
+            if (miEjercito.Count == 0)
             {
                 Debug.Log("IAEnemiga: me he quedado sin ejército, vuelvo a reclutar.");
                 enFormacion = false; cargando = false; ciclosEnFase = 0;
                 faseActual = FaseEstrategia.PreparacionMilitar;
+                return;
+            }
+
+            // El asalto también puede atascarse (tropas trabadas, formación imposible).
+            // Si lleva demasiado sin resolverse, rehacemos formación y volvemos a cargar.
+            if (ciclosEnFase >= ciclosMaximosPorFase)
+            {
+                Debug.LogWarning("IAEnemiga: el asalto está atascado, reorganizo y vuelvo a cargar.");
+                enFormacion = false; cargando = false; ciclosEnFormacion = 0; ciclosEnFase = 0;
             }
             return;
         }
@@ -998,6 +1047,7 @@ public class IAEnemiga : MonoBehaviour
     {
         // Reloj y contadores de bloqueo a cero: empieza una partida nueva
         tiempoDePartida = 0f;
+        proximoAtaqueForzoso = segundosHastaAtaqueForzoso;
         ciclosEnFase = 0;
         faseRegistrada = faseActual;
 

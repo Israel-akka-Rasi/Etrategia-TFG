@@ -11,10 +11,20 @@ public class Recolector : MonoBehaviour
     [Header("Configuración")]
     public float tiempoEntreRecoleccion = 1.5f;
     public float distanciaDeTrabajo = 3.5f;
+    public float distanciaEntrega = 3.5f;
+
+    [Header("Carga")]
+    // Recoge hasta llenar la mochila y entonces la lleva al castillo.
+    // Mismo modelo que usa la IA: así ambos bandos rinden igual.
+    public int capacidadCarga = 10;
+
+    [Header("Indicador Visual de Carga")]
+    // Objeto que se enciende cuando la tropa lleva recursos encima.
+    // Arrastra aquí un icono/saco colocado sobre la cabeza de la unidad.
+    public GameObject indicadorCarga;
 
     [Header("Automatismo")]
     // Al agotarse el nodo, busca solo el siguiente más cercano que pueda trabajar.
-    // Sin esto habría que re-ordenarlo a mano cada vez que se acaba un árbol.
     public bool buscarOtroAlAgotarse = true;
     public float radioBusquedaNodo = 40f;
 
@@ -22,6 +32,11 @@ public class Recolector : MonoBehaviour
     private Recurso recursoObjetivo;
     private NavMeshAgent agente;
     private Tropa miTropa;
+    private BaseMilitar miCastillo;
+
+    private int cargaActual = 0;
+    private bool entregando = false;              // true = volviendo al castillo
+    private Recurso.TipoRecurso tipoTransportado;
 
     void Awake()
     {
@@ -31,15 +46,46 @@ public class Recolector : MonoBehaviour
         miTropa = GetComponent<Tropa>();
     }
 
+    void Start()
+    {
+        ActualizarIndicador();
+    }
+
+    // Localiza (y cachea) el castillo de nuestro equipo
+    BaseMilitar MiCastillo()
+    {
+        if (miCastillo != null) return miCastillo;
+        if (miTropa == null) return null;
+
+        BaseMilitar[] bases = FindObjectsOfType<BaseMilitar>();
+        foreach (BaseMilitar b in bases)
+        {
+            if (b.equipo == miTropa.equipo) { miCastillo = b; break; }
+        }
+        return miCastillo;
+    }
+
     void Update()
     {
+        // --- VIAJE DE VUELTA: llevamos la carga al castillo ---
+        if (entregando)
+        {
+            GestionarEntrega();
+            return;
+        }
+
         if (recursoObjetivo == null) return;
 
-        // Si el nodo se ha agotado, buscamos otro igual (o paramos si no hay)
+        // Nodo agotado: si llevamos algo, lo entregamos; si no, buscamos otro
         if (!recursoObjetivo.EstaDisponible())
         {
-            Recurso siguiente = buscarOtroAlAgotarse ? BuscarNodoMasCercano(recursoObjetivo.tipo) : null;
+            if (cargaActual > 0)
+            {
+                IniciarEntrega();
+                return;
+            }
 
+            Recurso siguiente = buscarOtroAlAgotarse ? BuscarNodoMasCercano(recursoObjetivo.tipo) : null;
             if (siguiente != null)
             {
                 recursoObjetivo = siguiente;
@@ -53,6 +99,7 @@ public class Recolector : MonoBehaviour
             return;
         }
 
+        // --- EXTRACCIÓN ---
         float distancia = Vector3.Distance(transform.position, recursoObjetivo.transform.position);
 
         if (distancia <= distanciaDeTrabajo)
@@ -62,8 +109,8 @@ public class Recolector : MonoBehaviour
 
             if (temporizador >= tiempoEntreRecoleccion)
             {
-                EjecutarTrabajo();
-                temporizador = 0;
+                Extraer();
+                temporizador = 0f;
             }
         }
         else
@@ -73,22 +120,85 @@ public class Recolector : MonoBehaviour
         }
     }
 
-    void EjecutarTrabajo()
+    // Saca una tanda del nodo y la mete en la mochila
+    void Extraer()
     {
         if (recursoObjetivo == null || !recursoObjetivo.EstaDisponible()) return;
 
-        Debug.Log("¡" + gameObject.name + " está talando! + " + recursoObjetivo.cantidadPorTanda + " de " + recursoObjetivo.tipo);
+        int cantidad = recursoObjetivo.cantidadPorTanda;
+        int hueco = capacidadCarga - cargaActual;
+        if (cantidad > hueco) cantidad = hueco;
+        if (cantidad <= 0) { IniciarEntrega(); return; }
 
-        // Buscamos nuestra propia base y le entregamos
-        BaseMilitar[] todasLasBases = FindObjectsOfType<BaseMilitar>();
-        foreach (BaseMilitar b in todasLasBases)
+        recursoObjetivo.SerExtraido(cantidad);
+
+        tipoTransportado = recursoObjetivo.tipo;
+        cargaActual += cantidad;
+        ActualizarIndicador();
+
+        // Mochila llena: a llevarla al castillo
+        if (cargaActual >= capacidadCarga)
         {
-            if (b.equipo == miTropa.equipo)
-            {
-                b.RecibirRecurso(recursoObjetivo.tipo.ToString(), recursoObjetivo.cantidadPorTanda);
-                recursoObjetivo.SerExtraido(recursoObjetivo.cantidadPorTanda);
-                break;
-            }
+            IniciarEntrega();
+        }
+    }
+
+    void IniciarEntrega()
+    {
+        BaseMilitar castillo = MiCastillo();
+        if (castillo == null) return;
+
+        entregando = true;
+        temporizador = 0f;
+
+        if (agente != null && agente.isOnNavMesh)
+        {
+            agente.isStopped = false;
+            agente.SetDestination(castillo.transform.position);
+        }
+    }
+
+    void GestionarEntrega()
+    {
+        BaseMilitar castillo = MiCastillo();
+        if (castillo == null) { entregando = false; return; }
+
+        float distancia = Vector3.Distance(transform.position, castillo.transform.position);
+
+        if (distancia > distanciaEntrega)
+        {
+            agente.isStopped = false;
+            agente.SetDestination(castillo.transform.position);
+            return;
+        }
+
+        // --- ENTREGA ---
+        castillo.RecibirRecurso(tipoTransportado.ToString(), cargaActual);
+        Debug.Log($"{gameObject.name} entrega {cargaActual} de {tipoTransportado} al castillo.");
+
+        cargaActual = 0;
+        entregando = false;
+        ActualizarIndicador();
+
+        // Volvemos al tajo: al mismo nodo si sigue vivo, o al más cercano
+        if (recursoObjetivo == null || !recursoObjetivo.EstaDisponible())
+        {
+            recursoObjetivo = buscarOtroAlAgotarse ? BuscarNodoMasCercano(tipoTransportado) : null;
+        }
+
+        if (recursoObjetivo != null && agente.isOnNavMesh)
+        {
+            agente.isStopped = false;
+            agente.SetDestination(recursoObjetivo.transform.position);
+        }
+    }
+
+    // Enciende o apaga el icono de "llevo recursos"
+    void ActualizarIndicador()
+    {
+        if (indicadorCarga != null)
+        {
+            indicadorCarga.SetActive(cargaActual > 0);
         }
     }
 
@@ -131,25 +241,32 @@ public class Recolector : MonoBehaviour
         if (scriptCombate != null) scriptCombate.CancelarAtaque();
 
         recursoObjetivo = nuevoRecurso;
+        entregando = false; // el jugador manda: vamos al nodo, ya entregaremos
+        temporizador = 0f;
     }
 
     public void DetenerTrabajo()
     {
         recursoObjetivo = null;
+        entregando = false;
         temporizador = 0f;
 
-        // ¡CLAVE! Mientras talaba le pusimos el freno de mano (isStopped = true).
+        // ¡CLAVE! Mientras trabajaba le pusimos el freno de mano (isStopped = true).
         // Si no lo soltamos aquí, la unidad se queda clavada y no obedece
         // ninguna orden de movimiento posterior.
         if (agente != null && agente.isOnNavMesh)
         {
             agente.isStopped = false;
         }
+        // Ojo: la carga NO se pierde. Sigue en la mochila (y el icono encendido).
     }
 
-    // ¿Está ahora mismo asignado a recolectar un nodo?
+    // Ocupado recolectando o entregando: Tropa no debe interferir en su movimiento
     public bool TieneRecurso()
     {
-        return recursoObjetivo != null;
+        return recursoObjetivo != null || entregando;
     }
+
+    // Para la interfaz: cuánto lleva encima
+    public int CargaActual() { return cargaActual; }
 }

@@ -184,7 +184,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Tropa
   equipo: 1
-  salud: 3
+  salud: 100
   saludMaxima: 0
   indicadorSeleccion: {fileID: 3958893920667035442}
   barraSalud: {fileID: 8745680620816122606}
@@ -201,10 +201,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1642fedac56ef8642aa39811dc40fbbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Combate
-  dano: 1
+  dano: 12
   rangoAtaque: 1.5
   tiempoEntreAtaques: 1
-  radioVision: 5
+  radioVision: 8
+  intervaloRecalculo: 0.25
+  umbralMovimientoObjetivo: 1
 --- !u!1001 &2367925161126724867
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -22,7 +22,7 @@ public class RecolectorIA : MonoBehaviour
     public float radioBusquedaNavMesh = 3f;  // Punto caminable junto al recurso (no el tronco/roca)
 
     [Header("Ventaja de la IA")]
-    public float bonoDificultad = 1.2f; // 1.2 = 20% más rápido
+    public float bonoDificultad = 1f; // 1.2 = 20% más rápido
 
     private EstadoRecolector estadoActual;
     private NavMeshAgent agente;
