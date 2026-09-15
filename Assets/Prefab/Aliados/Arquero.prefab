@@ -185,6 +185,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Tropa
   equipo: 0
+  tipo: 4
   salud: 60
   saludMaxima: 0
   indicadorSeleccion: {fileID: 410845817477274290}
@@ -225,6 +226,10 @@ MonoBehaviour:
   puedeOro: 0
   tiempoEntreRecoleccion: 1.5
   distanciaDeTrabajo: 1.5
+  distanciaEntrega: 3.5
+  capacidadCarga: 10
+  indicadorCarga: {fileID: 0}
+  trabajarAlNacer: 0
   buscarOtroAlAgotarse: 1
   radioBusquedaNodo: 40
 --- !u!1001 &32888068842790094

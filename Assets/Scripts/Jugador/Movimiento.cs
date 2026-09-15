@@ -226,10 +226,12 @@ void Update()
 
         Rect rectanguloSeleccion = new Rect(minX, minY, maxX - minX, maxY - minY);
 
-        // 2. Buscamos TODOS los objetos Tropa del mapa
-        Tropa[] todasLasTropas = FindObjectsByType<Tropa>(FindObjectsSortMode.None);
+        // 2. Solo las tropas del ÁREA VISIBLE: con varias partidas entrenando a la
+        //    vez, una búsqueda global seleccionaría tropas de otras partidas.
+        AreaPartida area = AreaPartida.AreaVisible();
+        if (area == null) return;
 
-        foreach (Tropa soldado in todasLasTropas)
+        foreach (Tropa soldado in area.Tropas())
         {
             // Solo queremos atrapar a los de nuestro equipo
             if (soldado.equipo == 0)

@@ -24,8 +24,14 @@ public class Recolector : MonoBehaviour
     public GameObject indicadorCarga;
 
     [Header("Automatismo")]
+    // Al nacer, buscar trabajo por su cuenta. DESACTIVADO por defecto: el jugador
+    // decide a qué recurso manda cada unidad. El agente entrenado no lo necesita
+    // porque dispone de la acción "Asignar recolectores" para los que estén ociosos.
+    public bool trabajarAlNacer = false;
     // Al agotarse el nodo, busca solo el siguiente más cercano que pueda trabajar.
     public bool buscarOtroAlAgotarse = true;
+    // Radio para la búsqueda AUTOMÁTICA (al agotarse el nodo actual): limitado a
+    // propósito, para que no crucen el mapa entero por su cuenta.
     public float radioBusquedaNodo = 40f;
 
     private float temporizador;
@@ -49,6 +55,36 @@ public class Recolector : MonoBehaviour
     void Start()
     {
         ActualizarIndicador();
+        if (trabajarAlNacer) BuscarTrabajo();
+    }
+
+    // Se pone a trabajar en el nodo disponible más cercano que sepa explotar.
+    // Es una ORDEN EXPRESA, así que busca por TODO el mapa: si limitáramos la
+    // distancia, un minero cuya mina está en la otra punta se quedaría parado.
+    // Devuelve true si ha encontrado algo que hacer.
+    public bool BuscarTrabajo()
+    {
+        if (recursoObjetivo != null || entregando) return true; // ya está ocupado
+
+        Recurso destino = null;
+        if (puedeMadera) destino = BuscarNodoMasCercano(Recurso.TipoRecurso.Madera, Mathf.Infinity);
+        if (destino == null && puedePiedra) destino = BuscarNodoMasCercano(Recurso.TipoRecurso.Piedra, Mathf.Infinity);
+        if (destino == null && puedeOro) destino = BuscarNodoMasCercano(Recurso.TipoRecurso.Oro, Mathf.Infinity);
+
+        if (destino == null)
+        {
+            Debug.Log($"{gameObject.name}: no encuentro ningún nodo disponible de mi tipo en todo el mapa.");
+            return false;
+        }
+
+        OrdenarRecoleccion(destino);
+        return true;
+    }
+
+    // ¿Está parado sin hacer nada?
+    public bool EstaOcioso()
+    {
+        return recursoObjetivo == null && !entregando;
     }
 
     // Localiza (y cachea) el castillo de nuestro equipo
@@ -57,11 +93,11 @@ public class Recolector : MonoBehaviour
         if (miCastillo != null) return miCastillo;
         if (miTropa == null) return null;
 
-        BaseMilitar[] bases = FindObjectsOfType<BaseMilitar>();
-        foreach (BaseMilitar b in bases)
-        {
-            if (b.equipo == miTropa.equipo) { miCastillo = b; break; }
-        }
+        // Solo el castillo de MI partida: con varias áreas entrenando a la vez,
+        // una búsqueda global podría devolvernos el castillo de otra partida.
+        AreaPartida area = miTropa.MiArea();
+        if (area != null) miCastillo = area.BaseDeEquipo(miTropa.equipo);
+
         return miCastillo;
     }
 
@@ -205,24 +241,18 @@ public class Recolector : MonoBehaviour
     // Busca el nodo disponible más cercano del mismo tipo que este recolector pueda trabajar
     Recurso BuscarNodoMasCercano(Recurso.TipoRecurso tipo)
     {
+        return BuscarNodoMasCercano(tipo, radioBusquedaNodo);
+    }
+
+    Recurso BuscarNodoMasCercano(Recurso.TipoRecurso tipo, float radio)
+    {
         if (!PuedeTrabajar(tipo)) return null;
 
-        Recurso[] todos = FindObjectsOfType<Recurso>();
-        Recurso mejor = null;
-        float distanciaMinima = radioBusquedaNodo;
+        // Solo nodos de MI partida, disponibles y dentro del radio de búsqueda
+        AreaPartida area = (miTropa != null) ? miTropa.MiArea() : AreaPartida.Resolver(this);
+        if (area == null) return null;
 
-        foreach (Recurso r in todos)
-        {
-            if (r == null || r.tipo != tipo || !r.EstaDisponible()) continue;
-
-            float d = Vector3.Distance(transform.position, r.transform.position);
-            if (d < distanciaMinima)
-            {
-                distanciaMinima = d;
-                mejor = r;
-            }
-        }
-        return mejor;
+        return area.RecursoMasCercano(tipo, transform.position, radio);
     }
 
     // ¿Tiene herramientas para este tipo de recurso?

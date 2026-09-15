@@ -14,8 +14,23 @@ public class Recurso : MonoBehaviour
     private Renderer[] renderers;
     private Collider[] colliders;
 
+    // Área (partida) a la que pertenece este nodo de recurso
+    private AreaPartida miArea;
+    public AreaPartida MiArea()
+    {
+        if (miArea == null) miArea = AreaPartida.Resolver(this);
+        return miArea;
+    }
+
+    void OnDestroy()
+    {
+        if (miArea != null) miArea.Desregistrar(this);
+    }
+
     void Awake()
     {
+        MiArea().Registrar(this);
+
         reservaInicial = reservaHabilitada;
         renderers = GetComponentsInChildren<Renderer>(true);
         colliders = GetComponentsInChildren<Collider>(true);

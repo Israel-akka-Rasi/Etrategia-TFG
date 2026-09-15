@@ -177,7 +177,7 @@ MonoBehaviour:
   nombreEdificio: Coliseo
   puntoSpawn: {fileID: 7940484165733265007}
   equipo: 0
-  nivelRequerido: 5
+  nivelRequerido: 4
   costeConstruccionMadera: 100
   costeConstruccionPiedra: 50
   costeConstruccionOro: 20

@@ -13,12 +13,10 @@ public static class SpawnUtils
 
         GameObject nuevaTropa = Object.Instantiate(prefab, posicionFinal, Quaternion.identity);
 
-        // Si hay una partida en marcha, metemos la tropa en el contenedor dinámico
-        // para poder borrarla de golpe al reiniciar el episodio.
-        if (GestorPartida.Instancia != null && GestorPartida.Instancia.contenedorDinamico != null)
-        {
-            nuevaTropa.transform.SetParent(GestorPartida.Instancia.contenedorDinamico, true);
-        }
+        // La tropa nace dentro del contenedor dinámico de SU partida (la del punto
+        // de spawn), para poder borrarla al reiniciar ese episodio sin tocar otros.
+        AreaPartida area = AreaPartida.Resolver(puntoSpawn);
+        if (area != null) area.Adoptar(nuevaTropa);
 
         Tropa scriptTropa = nuevaTropa.GetComponent<Tropa>();
         if (scriptTropa != null)

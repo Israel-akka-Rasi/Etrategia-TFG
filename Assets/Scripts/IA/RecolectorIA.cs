@@ -22,7 +22,7 @@ public class RecolectorIA : MonoBehaviour
     public float radioBusquedaNavMesh = 3f;  // Punto caminable junto al recurso (no el tronco/roca)
 
     [Header("Ventaja de la IA")]
-    public float bonoDificultad = 1f; // 1.2 = 20% más rápido
+    public float bonoDificultad = 1.2f; // 1.2 = 20% más rápido
 
     private EstadoRecolector estadoActual;
     private NavMeshAgent agente;
@@ -64,10 +64,14 @@ public class RecolectorIA : MonoBehaviour
 
     void BuscarBaseMasCercana()
     {
-        BaseMilitar[] bases = FindObjectsOfType<BaseMilitar>();
+        // Solo bases de MI partida (con varias áreas a la vez, una búsqueda
+        // global podría mandarnos a entregar a la base de otra partida).
+        AreaPartida area = AreaPartida.Resolver(this);
+        if (area == null) return;
+
         float distanciaMinima = Mathf.Infinity;
 
-        foreach (BaseMilitar b in bases)
+        foreach (BaseMilitar b in area.Bases())
         {
             if (b.equipo != equipo) continue; // solo bases de nuestro bando
 
@@ -133,11 +137,14 @@ public class RecolectorIA : MonoBehaviour
 
     void BuscarRecursoMasCercano()
     {
-        Recurso[] recursos = FindObjectsOfType<Recurso>();
+        // Solo nodos de MI partida
+        AreaPartida area = AreaPartida.Resolver(this);
+        if (area == null) return;
+
         float distanciaMinima = Mathf.Infinity;
         Recurso elegido = null;
 
-        foreach (Recurso rec in recursos)
+        foreach (Recurso rec in area.Recursos())
         {
             // Solo nos interesan los recursos de NUESTRO tipo y que tengan reserva
             if (rec.tipo != tipoRecurso) continue;
@@ -236,7 +243,12 @@ public class RecolectorIA : MonoBehaviour
         }
 
         // Si traemos algo, volvemos a la base; si el nodo estaba agotado, a buscar otro
-        if (recursosLlevados > 0 && miBase != null)
+        // La corrutina puede seguir viva tras un reinicio de episodio, cuando el
+        // agente ya está destruido o fuera del NavMesh. Sin esta comprobación,
+        // Unity lanza "SetDestination can only be called on an active agent".
+        bool agenteUtil = agente != null && agente.isActiveAndEnabled && agente.isOnNavMesh;
+
+        if (recursosLlevados > 0 && miBase != null && agenteUtil)
         {
             agente.SetDestination(miBase.transform.position);
             estadoActual = EstadoRecolector.VolviendoBase;

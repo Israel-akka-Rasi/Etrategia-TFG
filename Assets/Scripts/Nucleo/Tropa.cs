@@ -2,10 +2,24 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
 
+// Tipo de unidad. Se asigna UNA VEZ en cada prefab y evita tener que deducirlo
+// de sus estadísticas (que es frágil: al reequilibrar números, las cuentas del
+// entorno de RL empezarían a contar mal sin dar ningún error).
+public enum TipoTropa
+{
+    Lenador,
+    Minero,
+    Tesorero,
+    Caballero,
+    Arquero,
+    Gladiador
+}
+
 public class Tropa : MonoBehaviour
 {
     [Header("Identidad")]
     public int equipo;
+    public TipoTropa tipo = TipoTropa.Caballero; // ¡asignar en cada prefab!
     public int salud = 100;   // Caballero (línea base). Ver tabla de stats por tipo.
     public float saludMaxima; // Para calcular el porcentaje de la barra
 
@@ -21,6 +35,18 @@ public class Tropa : MonoBehaviour
     // Castillo al que "pertenece" esta unidad (para devolverle el hueco de población)
     private BaseMilitar miCastillo;
 
+    // Lo que costó reclutar esta unidad. Lo rellena quien la crea (castillo o
+    // edificio) y sirve para devolver una parte al licenciarla.
+    [System.NonSerialized] public int costeMaderaPagado;
+    [System.NonSerialized] public int costePiedraPagado;
+    [System.NonSerialized] public int costeOroPagado;
+
+    // ¿Es una unidad de economía?
+    public bool EsRecolector()
+    {
+        return tipo == TipoTropa.Lenador || tipo == TipoTropa.Minero || tipo == TipoTropa.Tesorero;
+    }
+
     // Velocidad propia del prefab. Al moverse en grupo se baja a la del más lento
     // para que el ejército llegue junto, y se restaura al terminar el movimiento.
     private float velocidadOriginal;
@@ -34,8 +60,18 @@ public class Tropa : MonoBehaviour
     private float remanenteAnterior = Mathf.Infinity;
     private float tiempoSinAvanzar = 0f;
 
+    // Área (partida) a la que pertenece esta unidad
+    private AreaPartida miArea;
+    public AreaPartida MiArea()
+    {
+        if (miArea == null) miArea = AreaPartida.Resolver(this);
+        return miArea;
+    }
+
     void Awake()
     {
+        MiArea().Registrar(this);
+
         agente = GetComponent<NavMeshAgent>();
         saludMaxima = salud;
 
@@ -48,12 +84,10 @@ public class Tropa : MonoBehaviour
 
     void Start()
     {
-        // Localizamos el castillo de nuestro equipo para devolverle el hueco al morir
-        BaseMilitar[] bases = FindObjectsOfType<BaseMilitar>();
-        foreach (BaseMilitar b in bases)
-        {
-            if (b.equipo == equipo) { miCastillo = b; break; }
-        }
+        // El castillo de nuestro equipo DENTRO de nuestra partida, para devolverle
+        // el hueco de población al morir.
+        AreaPartida area = MiArea();
+        if (area != null) miCastillo = area.BaseDeEquipo(equipo);
     }
 
     // Al morir (o ser destruida por cualquier motivo) devolvemos el hueco de población.
@@ -61,11 +95,15 @@ public class Tropa : MonoBehaviour
     // aunque te hayan matado media tropa.
     void OnDestroy()
     {
+        if (miArea != null) miArea.Desregistrar(this);
+
         if (!Application.isPlaying) return;
 
         // Durante el reinicio de episodio no se descuenta: las bases ya han
         // restaurado su población inicial y descontar aquí la dejaría en negativo.
-        if (GestorPartida.Instancia != null && GestorPartida.Instancia.EstaReiniciando) return;
+        // Durante el reinicio de NUESTRA partida no se descuenta población
+        GestorPartida gestor = (miArea != null) ? miArea.Gestor() : null;
+        if (gestor != null && gestor.EstaReiniciando) return;
 
         if (miCastillo != null) miCastillo.LiberarPoblacion();
     }

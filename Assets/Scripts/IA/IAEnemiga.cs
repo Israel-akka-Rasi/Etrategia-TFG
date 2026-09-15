@@ -99,6 +99,9 @@ public class IAEnemiga : MonoBehaviour
     // Si una fase se atasca (sin recursos, sin hueco, sin poder construir...),
     // la IA avanza igualmente en vez de quedarse esperando para siempre.
     public int ciclosMaximosPorFase = 20;
+    // Ahorrar para un edificio caro NO es estar atascado. Mientras la IA esté
+    // esperando recursos le damos mucho más margen antes de saltarse el edificio.
+    public int ciclosMaximosAhorrando = 70;
     // Pase lo que pase, a partir de este momento ataca con lo que tenga.
     // Garantiza que la partida SIEMPRE se resuelve y nunca hay tablas eternas.
     public float segundosHastaAtaqueForzoso = 240f;
@@ -181,6 +184,9 @@ public class IAEnemiga : MonoBehaviour
     private int ciclosEnFase = 0;
     private float tiempoDePartida = 0f;
     private float proximoAtaqueForzoso = 240f;
+    private bool ahorrandoParaEdificio = false; // true = solo le faltan recursos
+    private int planVigilado = -1;              // edificio del que estamos midiendo paciencia
+    private float saludEnemigaVigilada = -1f;   // para saber si el asalto progresa
     private float intervaloReal = 3f; // el ritmo realmente usado (con su variación)
 
     // Reacción: defensa y retirada
@@ -249,6 +255,9 @@ public class IAEnemiga : MonoBehaviour
         // Estado reactivo (defensa y retirada)
         defendiendoAhora = false;
         picoEjercito = 0;
+        planVigilado = -1;
+        saludEnemigaVigilada = -1f;
+        ahorrandoParaEdificio = false;
 
         // Reseteamos el estado en tiempo de ejecución de cada entrada del plan
         foreach (PlanEdificio p in planConstruccion)
@@ -283,6 +292,14 @@ public class IAEnemiga : MonoBehaviour
         tiempoDePartida += intervaloReal;
         if (faseActual != faseRegistrada) { faseRegistrada = faseActual; ciclosEnFase = 0; }
         else ciclosEnFase++;
+
+        // En construcción la paciencia se mide POR EDIFICIO, no por fase entera:
+        // si no, levantar cuatro edificios agota el contador y se salta los últimos.
+        if (faseActual == FaseEstrategia.Construccion && planActual != planVigilado)
+        {
+            planVigilado = planActual;
+            ciclosEnFase = 0;
+        }
 
         GestionarBloqueos();
 
@@ -422,7 +439,10 @@ public class IAEnemiga : MonoBehaviour
             if (plan.tropasSonMilitares) continue;
             if (plan.edificioConstruido == null) continue;
 
-            int objetivo = Mathf.Min(plan.tropasAReclutar, plan.pico);
+            // En economía apuntamos SIEMPRE al objetivo completo (no al máximo
+            // alcanzado): si un edificio se quedó sin dotar por falta de hueco,
+            // se completa en cuanto haya población. Sin recursos no hay partida.
+            int objetivo = plan.tropasAReclutar;
             if (plan.Vivas() < objetivo)
             {
                 if (!HayHuecoPoblacion()) return false;
@@ -517,6 +537,20 @@ public class IAEnemiga : MonoBehaviour
                 return;
             }
 
+            // ¿Está progresando el asalto? Si el castillo enemigo pierde vida,
+            // NO está atascado aunque tarde: reiniciamos el contador de paciencia.
+            BaseMilitar objetivoAsedio = BuscarBaseEnemiga();
+            if (objetivoAsedio != null)
+            {
+                if (saludEnemigaVigilada < 0f) saludEnemigaVigilada = objetivoAsedio.salud;
+                else if (objetivoAsedio.salud < saludEnemigaVigilada - 0.5f)
+                {
+                    saludEnemigaVigilada = objetivoAsedio.salud;
+                    ciclosEnFase = 0; // avanza, le damos más tiempo
+                    return;
+                }
+            }
+
             // El asalto también puede atascarse (tropas trabadas, formación imposible).
             // Si lleva demasiado sin resolverse, rehacemos formación y volvemos a cargar.
             if (ciclosEnFase >= ciclosMaximosPorFase)
@@ -529,6 +563,13 @@ public class IAEnemiga : MonoBehaviour
 
         // --- Paciencia por fase ---
         if (ciclosEnFase < ciclosMaximosPorFase) return;
+
+        // Si solo está esperando recursos o nivel, NO es un bloqueo: le damos
+        // mucho más margen. Sin esto, con una economía lenta se saltaría todos
+        // los edificios y acabaría atacando solo con caballeros.
+        if (faseActual == FaseEstrategia.Construccion
+            && ahorrandoParaEdificio
+            && ciclosEnFase < ciclosMaximosAhorrando) return;
 
         ciclosEnFase = 0;
 
@@ -599,6 +640,10 @@ public class IAEnemiga : MonoBehaviour
 
         miEjercito.RemoveAll(m => m.objeto == null);
 
+        // CONCENTRAR EL FUEGO: todos atacan al MISMO invasor (el más cercano al
+        // castillo) en vez de repartirse. Matar rápido a uno reduce el daño que
+        // recibimos; repartir golpes deja a todos los enemigos vivos pegando.
+        // Es la táctica que usa cualquier jugador y la IA no la tenía.
         foreach (MiembroEjercito m in miEjercito)
         {
             if (m.objeto == null) continue;
@@ -610,9 +655,7 @@ public class IAEnemiga : MonoBehaviour
             Combate c = m.objeto.GetComponent<Combate>();
             if (c == null) continue;
 
-            // Cada soldado va a por el invasor más cercano a ÉL, no todos al mismo
-            Tropa objetivo = BuscarInvasorMasCercanoA(m.objeto.transform.position);
-            if (objetivo != null) c.OrdenarAtaque(objetivo.transform);
+            c.OrdenarAtaque(invasor.transform);
         }
 
         return true;
@@ -622,13 +665,6 @@ public class IAEnemiga : MonoBehaviour
     Tropa BuscarInvasorMasCercano()
     {
         return BuscarInvasorEnRadio(transform.position, radioDefensaBase);
-    }
-
-    // Enemigo más cercano a un punto concreto (para repartir objetivos)
-    Tropa BuscarInvasorMasCercanoA(Vector3 posicion)
-    {
-        // Buscamos algo más lejos, porque el soldado puede estar en el borde
-        return BuscarInvasorEnRadio(posicion, radioDefensaBase * 1.5f);
     }
 
     Tropa BuscarInvasorEnRadio(Vector3 centro, float radio)
@@ -754,7 +790,18 @@ public class IAEnemiga : MonoBehaviour
             // ¿Tiene nivel de castillo? Si no, intenta subir (es prioritario).
             if (!TieneNivel(datos.nivelRequerido))
             {
+                ahorrandoParaEdificio = true; // esperando nivel, no atascada
                 Debug.Log($"IAEnemiga: '{plan.nombre}' requiere nivel {datos.nivelRequerido} (tengo {miBase.nivelCastillo}). Mejorando castillo...");
+                return;
+            }
+
+            // ¿Queda algún hueco donde ponerlo? Comprobarlo ANTES de ahorrar evita
+            // pasarse medio minuto juntando recursos para un edificio sin sitio.
+            if (!HayAnclajeLibre())
+            {
+                Debug.LogWarning($"IAEnemiga: no queda sitio para '{plan.nombre}', lo salto sin ahorrar.");
+                ahorrandoParaEdificio = false;
+                planActual++;
                 return;
             }
 
@@ -762,9 +809,12 @@ public class IAEnemiga : MonoBehaviour
             string motivo;
             if (!datos.PuedeConstruirlo(miBase, out motivo))
             {
+                ahorrandoParaEdificio = true; // no está atascada, está ahorrando
                 Debug.Log($"IAEnemiga: no puede construir '{plan.nombre}': {motivo}. Ahorrando...");
                 return;
             }
+
+            ahorrandoParaEdificio = false;
 
             plan.edificioConstruido = ConstruirEdificio(plan.prefabEdificio);
 
@@ -788,9 +838,14 @@ public class IAEnemiga : MonoBehaviour
         {
             if (!HayHuecoPoblacion())
             {
+                // NO es un bloqueo: falta hueco y se resuelve subiendo de nivel.
+                // Si lo tratáramos como atasco, saltaríamos el edificio económico
+                // y nos quedaríamos sin su recurso el resto de la partida.
+                ahorrandoParaEdificio = true;
                 Debug.Log("IAEnemiga: población llena, mejorando castillo para sacar más recolectores...");
                 return;
             }
+            ahorrandoParaEdificio = false;
 
             GameObject tropa = plan.edificioConstruido.ComprarTropa();
             if (tropa != null)
@@ -874,13 +929,24 @@ public class IAEnemiga : MonoBehaviour
     {
         miEjercito.RemoveAll(m => m.objeto == null);
 
-        // ¿Listos para el asalto? (suficientes expediciones y tropas)
-        if (expedicionesHechas >= expedicionesObjetivo && miEjercito.Count >= tropasMinimasAtacar)
+        // ¿Expediciones cumplidas?
+        if (expedicionesHechas >= expedicionesObjetivo)
         {
+            // Con ejército suficiente, al asalto
+            if (miEjercito.Count >= tropasMinimasAtacar)
+            {
+                partidaFuera.Clear();
+                faseActual = FaseEstrategia.Asedio;
+                Debug.Log($"IAEnemiga: expediciones completas. ¡Preparando asalto con {miEjercito.Count} unidades!");
+                LogicaAsedio();
+                return;
+            }
+
+            // Sin ejército suficiente NO seguimos expedicionando en bucle:
+            // volvemos a reclutar. (Antes esto encadenaba expediciones 4/3, 5/3...)
             partidaFuera.Clear();
-            faseActual = FaseEstrategia.Asedio;
-            Debug.Log($"IAEnemiga: expediciones completas. ¡Preparando asalto con {miEjercito.Count} unidades!");
-            LogicaAsedio();
+            faseActual = FaseEstrategia.PreparacionMilitar;
+            Debug.Log($"IAEnemiga: solo tengo {miEjercito.Count}/{tropasMinimasAtacar} tropas. Vuelvo a reclutar antes de atacar.");
             return;
         }
 
@@ -1159,10 +1225,8 @@ public class IAEnemiga : MonoBehaviour
         GameObject edificioGO = Instantiate(prefabEdificio, punto, CalcularRotacionEdificio(punto));
 
         // Lo metemos en el contenedor dinámico para poder limpiarlo al reiniciar
-        if (GestorPartida.Instancia != null && GestorPartida.Instancia.contenedorDinamico != null)
-        {
-            edificioGO.transform.SetParent(GestorPartida.Instancia.contenedorDinamico, true);
-        }
+        AreaPartida area = AreaPartida.Resolver(this);
+        if (area != null) area.Adoptar(edificioGO);
 
         EdificioReclutamiento edificio = edificioGO.GetComponent<EdificioReclutamiento>();
         if (edificio != null)
@@ -1188,21 +1252,12 @@ public class IAEnemiga : MonoBehaviour
 
     BaseMilitar BuscarBaseEnemiga()
     {
-        BaseMilitar[] bases = FindObjectsOfType<BaseMilitar>();
-        BaseMilitar objetivo = null;
-        float distanciaMinima = Mathf.Infinity;
+        // CRÍTICO con varias partidas a la vez: si buscáramos en toda la escena,
+        // el ejército podría marcharse a asediar el castillo de OTRA partida.
+        AreaPartida area = AreaPartida.Resolver(this);
+        if (area == null || miBase == null) return null;
 
-        foreach (BaseMilitar b in bases)
-        {
-            if (b.equipo == miBase.equipo) continue;
-
-            float distancia = Vector3.Distance(transform.position, b.transform.position);
-            if (distancia < distanciaMinima)
-            {
-                distanciaMinima = distancia;
-                objetivo = b;
-            }
-        }
+        BaseMilitar objetivo = area.BaseEnemigaMasCercana(miBase.equipo, transform.position);
 
         return objetivo;
     }
@@ -1249,7 +1304,60 @@ public class IAEnemiga : MonoBehaviour
             }
         }
 
+        // ¿No hemos encontrado sitio ni para el plan? Reintentamos relajando las
+        // exigencias: más radio y menos espacio libre alrededor. Es preferible
+        // apretar un poco los edificios a quedarse sin poder construirlos.
+        int necesarios = planConstruccion.Count;
+        if (puntosDeAnclaje.Count < necesarios)
+        {
+            Debug.LogWarning($"IAEnemiga: solo {puntosDeAnclaje.Count} huecos para {necesarios} edificios. Reintento con menos exigencias.");
+            GenerarAnclajesRelajados(necesarios);
+        }
+
         Debug.Log($"IAEnemiga: Se han generado {puntosDeAnclaje.Count} huecos de construcción válidos.");
+    }
+
+    // ¿Queda algún anclaje sin ocupar? (solo consulta, no reserva)
+    bool HayAnclajeLibre()
+    {
+        for (int i = 0; i < anclajesOcupados.Count; i++)
+            if (!anclajesOcupados[i]) return true;
+        return false;
+    }
+
+    // Segunda pasada: más radio, menos separación y menos espacio libre exigido
+    void GenerarAnclajesRelajados(int necesarios)
+    {
+        float radioAmplio = radioConstruccion * 1.6f;
+        float separacion = distanciaEntreEdificios * 0.7f;
+        float libreReducido = radioLibre * 0.7f;
+
+        int intentos = 0;
+        while (puntosDeAnclaje.Count < necesarios && intentos < 120)
+        {
+            intentos++;
+
+            float angulo = Random.Range(0f, Mathf.PI * 2f);
+            Vector3 direccion = new Vector3(Mathf.Cos(angulo), 0f, Mathf.Sin(angulo));
+            float distancia = Random.Range(radioConstruccionMin, radioAmplio);
+            Vector3 candidato = transform.position + direccion * distancia;
+
+            UnityEngine.AI.NavMeshHit hit;
+            if (!UnityEngine.AI.NavMesh.SamplePosition(candidato, out hit, 2.0f, UnityEngine.AI.NavMesh.AllAreas))
+                continue;
+
+            bool espacioLibre = true;
+            foreach (Vector3 anclaje in puntosDeAnclaje)
+            {
+                if (Vector3.Distance(hit.position, anclaje) < separacion) { espacioLibre = false; break; }
+            }
+            if (!espacioLibre) continue;
+
+            if (Physics.CheckSphere(hit.position + Vector3.up, libreReducido, capaObstaculos)) continue;
+
+            puntosDeAnclaje.Add(hit.position);
+            anclajesOcupados.Add(false);
+        }
     }
 
     public bool IntentarObtenerPuntoConstruccion(out Vector3 puntoLibre)

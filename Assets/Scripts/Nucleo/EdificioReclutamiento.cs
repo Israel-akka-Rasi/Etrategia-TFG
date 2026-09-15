@@ -39,16 +39,37 @@ public class EdificioReclutamiento : MonoBehaviour
         if (miCastillo != null) equipo = miCastillo.equipo;
     }
 
+    // Área (partida) a la que pertenece este edificio
+    private AreaPartida miArea;
+    public AreaPartida MiArea()
+    {
+        if (miArea == null) miArea = AreaPartida.Resolver(this);
+        return miArea;
+    }
+
+    void Awake()
+    {
+        MiArea().Registrar(this);
+    }
+
+    void OnDestroy()
+    {
+        if (miArea != null) miArea.Desregistrar(this);
+    }
+
     void Start()
     {
         // Si nadie nos asignó dueño (caso del jugador), buscamos la base más cercana
         // de nuestro equipo. Para el jugador solo hay una base azul, así que acierta seguro.
         if (miCastillo == null)
         {
-            BaseMilitar[] bases = FindObjectsOfType<BaseMilitar>();
+            // Solo bases de NUESTRA partida
+            AreaPartida area = MiArea();
+            if (area == null) return;
+
             float distanciaMinima = Mathf.Infinity;
 
-            foreach (BaseMilitar b in bases)
+            foreach (BaseMilitar b in area.Bases())
             {
                 if (b.equipo != equipo) continue;
 
@@ -162,6 +183,11 @@ public class EdificioReclutamiento : MonoBehaviour
         {
             RecolectorIA recolectorIA = nuevaTropa.GetComponent<RecolectorIA>();
             if (recolectorIA != null) recolectorIA.AsignarBase(miCastillo);
+
+            // Anotamos lo que costó, para poder devolver parte si se licencia.
+            // En modo prueba no se cobró nada, así que tampoco se devuelve nada.
+            if (modoPrueba) BaseMilitar.AnotarCoste(nuevaTropa, 0, 0, 0);
+            else BaseMilitar.AnotarCoste(nuevaTropa, costeMadera, costePiedra, costeOro);
         }
 
         return nuevaTropa;

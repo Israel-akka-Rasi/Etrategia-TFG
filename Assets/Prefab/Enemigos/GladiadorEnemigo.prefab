@@ -184,6 +184,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Tropa
   equipo: 1
+  tipo: 5
   salud: 160
   saludMaxima: 0
   indicadorSeleccion: {fileID: 3958893920667035442}

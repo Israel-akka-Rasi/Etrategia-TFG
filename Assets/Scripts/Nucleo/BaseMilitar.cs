@@ -12,6 +12,9 @@ public class BaseMilitar : MonoBehaviour
     public int piedra = 0;
     public int oro = 0;
 
+    [Header("Licenciar Unidades")]
+    [Range(0f, 1f)] public float porcentajeDevolucion = 0.5f; // Se recupera la mitad
+
     [Header("Gestión de Población")]
     public int poblacionActual = 1; // Empezamos en 1 por el Leñador inicial gratis
     public int poblacionMaxima = 8;
@@ -33,6 +36,24 @@ public class BaseMilitar : MonoBehaviour
     // --- Estado inicial guardado, para poder restaurarlo al reiniciar el episodio ---
     private int maderaInicial, piedraInicial, oroInicial;
     private int poblacionInicial, poblacionMaximaInicial, nivelInicial;
+
+    // Área (partida) a la que pertenece este castillo
+    private AreaPartida miArea;
+    public AreaPartida MiArea()
+    {
+        if (miArea == null) miArea = AreaPartida.Resolver(this);
+        return miArea;
+    }
+
+    void Awake()
+    {
+        MiArea().Registrar(this);
+    }
+
+    void OnDestroy()
+    {
+        if (miArea != null) miArea.Desregistrar(this);
+    }
 
     void Start()
     {
@@ -204,7 +225,9 @@ public class BaseMilitar : MonoBehaviour
             // Ya NO destruimos la base (así se puede restaurar al reiniciar).
             // Solo avisamos del fin de partida: el GameManager decide si reinicia
             // (entrenamiento) o muestra el cartel de victoria/derrota (jugable).
-            GameManager gestor = FindObjectOfType<GameManager>();
+            // Avisamos al gestor de NUESTRA partida (él decide si hay cartel,
+            // si se reinicia solo por ser área de entrenamiento, etc.)
+            GestorPartida gestor = MiArea() != null ? MiArea().Gestor() : null;
             if (gestor != null)
             {
                 gestor.TerminarPartida(equipo);
@@ -229,8 +252,45 @@ public class BaseMilitar : MonoBehaviour
 
         GameObject nuevaTropa = SpawnUtils.SpawnConDesplazamiento(prefab, puntoSpawn);
         AsignarBaseSiEsRecolector(nuevaTropa);
+        AnotarCoste(nuevaTropa, costeM, costeP, costeO);
         ActualizarTextosUI();
         return nuevaTropa;
+    }
+
+    // Deja anotado en la unidad lo que costó, para poder devolver parte al licenciar
+    public static void AnotarCoste(GameObject tropa, int m, int p, int o)
+    {
+        if (tropa == null) return;
+        Tropa t = tropa.GetComponent<Tropa>();
+        if (t == null) return;
+
+        t.costeMaderaPagado = m;
+        t.costePiedraPagado = p;
+        t.costeOroPagado = o;
+    }
+
+    // --- LICENCIAR: retirar una unidad y recuperar parte de su coste ---
+    // Permite reconvertir economía en ejército a mitad de partida. La devolución
+    // es parcial a propósito: si fuera del 100% se podría comprar y vender sin
+    // penalización y las decisiones dejarían de tener consecuencias.
+    public bool LicenciarTropa(Tropa tropa)
+    {
+        if (tropa == null || tropa.equipo != equipo) return false;
+
+        int devM = Mathf.RoundToInt(tropa.costeMaderaPagado * porcentajeDevolucion);
+        int devP = Mathf.RoundToInt(tropa.costePiedraPagado * porcentajeDevolucion);
+        int devO = Mathf.RoundToInt(tropa.costeOroPagado * porcentajeDevolucion);
+
+        madera += devM;
+        piedra += devP;
+        oro += devO;
+
+        Debug.Log($"Licenciado {tropa.tipo}. Devuelto M:{devM} P:{devP} O:{devO}");
+
+        // El hueco de población lo libera el propio OnDestroy de la tropa
+        Destroy(tropa.gameObject);
+        ActualizarTextosUI();
+        return true;
     }
 
     private void AsignarBaseSiEsRecolector(GameObject tropa)

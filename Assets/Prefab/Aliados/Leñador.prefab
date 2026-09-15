@@ -192,7 +192,6 @@ GameObject:
   - component: {fileID: 4879789822418196390}
   - component: {fileID: -1804685398656419747}
   - component: {fileID: 7752270921667781321}
-  - component: {fileID: 264564440417642682}
   - component: {fileID: -2510734480646810618}
   m_Layer: 0
   m_Name: "Le\xF1ador"
@@ -276,29 +275,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Tropa
   equipo: 0
+  tipo: 0
   salud: 40
   saludMaxima: 0
   indicadorSeleccion: {fileID: 410845817477274290}
   barraSalud: {fileID: 6482578537794591523}
   retratoTropa: {fileID: 21300000, guid: 3175d0bcedd009d46bcf8bb03f1b32b9, type: 3}
---- !u!114 &264564440417642682
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6471491849626687814}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1642fedac56ef8642aa39811dc40fbbb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Combate
-  dano: 1
-  rangoAtaque: 1.5
-  tiempoEntreAtaques: 1
-  radioVision: 5
-  intervaloRecalculo: 0.25
-  umbralMovimientoObjetivo: 1
 --- !u!114 &-2510734480646810618
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -319,6 +301,7 @@ MonoBehaviour:
   distanciaEntrega: 3.5
   capacidadCarga: 10
   indicadorCarga: {fileID: 6162840064487574194}
+  trabajarAlNacer: 0
   buscarOtroAlAgotarse: 1
   radioBusquedaNodo: 40
 --- !u!1001 &32888068842790094

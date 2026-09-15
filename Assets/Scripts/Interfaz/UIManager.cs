@@ -24,6 +24,7 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI txtVidaUnidad;
     public TextMeshProUGUI txtAtaqueUnidad;
     public Image imgRetratoUnidad;
+    public Button botonLicenciar; // Retira la unidad seleccionada y devuelve parte del coste
 
     [Header("Menús")]
     public GameObject panelReclutamiento;
@@ -105,15 +106,9 @@ public class UIManager : MonoBehaviour
     {
         if (baseJugador == null)
         {
-            BaseMilitar[] bases = FindObjectsOfType<BaseMilitar>();
-            foreach (BaseMilitar b in bases)
-            {
-                if (b.equipo == 0)
-                {
-                    baseJugador = b;
-                    break;
-                }
-            }
+            // La interfaz siempre representa al ÁREA VISIBLE
+            AreaPartida area = AreaPartida.AreaVisible();
+            if (area != null) baseJugador = area.BaseDeEquipo(0);
         }
         return baseJugador;
     }
@@ -180,6 +175,18 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    // Retira la unidad seleccionada a cambio de parte de sus recursos
+    public void BotonLicenciarTropa()
+    {
+        if (tropaSeleccionada == null) return;
+
+        BaseMilitar castillo = ObtenerBaseJugador();
+        if (castillo == null) return;
+
+        castillo.LicenciarTropa(tropaSeleccionada);
+        OcultarPanelSeleccion();
+    }
+
     public void OcultarPanelSeleccion()
     {
         tropaSeleccionada = null;
@@ -212,9 +219,14 @@ public class UIManager : MonoBehaviour
 
         int contCampamentos = 0, contGalerias = 0, contGremios = 0, contColiseos = 0;
 
-        EdificioReclutamiento[] edificiosEnMapa = FindObjectsOfType<EdificioReclutamiento>();
-        foreach (EdificioReclutamiento edificio in edificiosEnMapa)
+        // Contamos solo los edificios DEL JUGADOR y del área visible
+        AreaPartida areaUI = AreaPartida.AreaVisible();
+        if (areaUI == null) return;
+
+        foreach (EdificioReclutamiento edificio in areaUI.Edificios())
         {
+            if (edificio.equipo != 0) continue; // los del enemigo no cuentan
+
             if (edificio.nombreEdificio == "Campamento Minero") contCampamentos++;
             else if (edificio.nombreEdificio == "Galeria de Tiro") contGalerias++;
             else if (edificio.nombreEdificio == "Gremio Comercial") contGremios++;

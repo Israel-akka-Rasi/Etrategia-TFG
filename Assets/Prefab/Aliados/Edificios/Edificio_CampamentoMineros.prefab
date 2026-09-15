@@ -166,7 +166,7 @@ MonoBehaviour:
   nombreEdificio: Campamento Minero
   puntoSpawn: {fileID: 840678721804296821}
   equipo: 0
-  nivelRequerido: 2
+  nivelRequerido: 1
   costeConstruccionMadera: 40
   costeConstruccionPiedra: 0
   costeConstruccionOro: 0

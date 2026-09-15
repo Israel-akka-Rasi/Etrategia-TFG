@@ -26,16 +26,14 @@ public class SistemaConstruccion : MonoBehaviour
     {
         if (castilloJugador != null) return castilloJugador;
 
-        BaseMilitar[] todasLasBases = FindObjectsOfType<BaseMilitar>();
-        foreach (BaseMilitar b in todasLasBases)
-        {
-            if (b.equipo == 0)
-            {
-                castilloJugador = b;
-                if (castilloCentro == null) castilloCentro = b.transform;
-                break;
-            }
-        }
+        // El castillo del jugador dentro del área que estamos viendo
+        AreaPartida area = AreaPartida.AreaVisible();
+        if (area == null) return null;
+
+        castilloJugador = area.BaseDeEquipo(0);
+        if (castilloJugador != null && castilloCentro == null)
+            castilloCentro = castilloJugador.transform;
+
         return castilloJugador;
     }
 
@@ -136,10 +134,8 @@ public class SistemaConstruccion : MonoBehaviour
         GameObject nuevoEdificio = Instantiate(prefabRealActual, posicion, Quaternion.identity);
 
         // Lo metemos en el contenedor dinámico para que se limpie al reiniciar episodio
-        if (GestorPartida.Instancia != null && GestorPartida.Instancia.contenedorDinamico != null)
-        {
-            nuevoEdificio.transform.SetParent(GestorPartida.Instancia.contenedorDinamico);
-        }
+        AreaPartida area = AreaPartida.AreaVisible();
+        if (area != null) area.Adoptar(nuevoEdificio);
 
         // Cobramos el precio
         EdificioReclutamiento edificio = nuevoEdificio.GetComponent<EdificioReclutamiento>();

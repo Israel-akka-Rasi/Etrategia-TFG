@@ -159,7 +159,7 @@ MonoBehaviour:
   piedra: 0
   oro: 0
   poblacionActual: 1
-  poblacionMaxima: 8
+  poblacionMaxima: 10
   poblacionPorNivel: 2
   salud: 2000
   barraSalud: {fileID: 0}
@@ -169,7 +169,7 @@ MonoBehaviour:
   prefabCaballero: {fileID: 8302275368063891483, guid: 84fd45dbf41fee34fa847ca74e702cf6, type: 3}
   costeCaballero: 12
   nivelMaximo: 6
-  costeBaseMejora: 50
+  costeBaseMejora: 30
   costePiedraMejora: 15
   costeOroMejora: 10
 --- !u!65 &4318329885324288829
@@ -245,6 +245,7 @@ MonoBehaviour:
     tropasAReclutar: 2
     tropasSonMilitares: 1
     rolFormacion: 0
+  guarnicionMinima: 2
   defenderLaBase: 1
   radioDefensaBase: 22
   radioLlamadaTropas: 60
@@ -254,6 +255,10 @@ MonoBehaviour:
   variacionExpediciones: 1
   variacionTropasAtacar: 1
   variacionRitmo: 0.2
+  ciclosMaximosPorFase: 20
+  ciclosMaximosAhorrando: 70
+  segundosHastaAtaqueForzoso: 420
+  segundosEntreAtaquesForzosos: 60
   maderaExtraInicio: 0
   piedraExtraInicio: 0
   oroExtraInicio: 0

@@ -161,7 +161,7 @@ MonoBehaviour:
   nombreEdificio: Gremio Comercial
   puntoSpawn: {fileID: 4994183848871853932}
   equipo: 0
-  nivelRequerido: 4
+  nivelRequerido: 3
   costeConstruccionMadera: 80
   costeConstruccionPiedra: 30
   costeConstruccionOro: 0

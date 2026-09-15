@@ -166,7 +166,7 @@ MonoBehaviour:
   nombreEdificio: Galeria de Tiro
   puntoSpawn: {fileID: 2367536872733836451}
   equipo: 0
-  nivelRequerido: 3
+  nivelRequerido: 2
   costeConstruccionMadera: 60
   costeConstruccionPiedra: 15
   costeConstruccionOro: 0
