@@ -45,7 +45,8 @@ public enum AccionRL
     // --- Militar ---
     AtacarBaseEnemiga = 16,
     AsaltarRecolectoresEnemigos = 17,
-    DefenderBase = 18
+    DefenderBase = 18,
+    ProtegerRecolectores = 19  // El ejército acude a donde trabajan los recolectores
 }
 
 public class EntornoRL : MonoBehaviour
@@ -74,6 +75,10 @@ public class EntornoRL : MonoBehaviour
     public float refPoblacion = 30f;
     public float refUnidades = 10f;
     public float refSaludCastillo = 2000f;
+
+    [Header("Escolta de Recolectores")]
+    // Distancia a la que se considera que un enemigo está acosando a un trabajador
+    public float radioAmenazaRecolectores = 15f;
 
     [Header("Fin Anticipado")]
     // Corta el episodio cuando el agente ya no puede remontar: sin recolectores,
@@ -175,6 +180,7 @@ public class EntornoRL : MonoBehaviour
             case AccionRL.AtacarBaseEnemiga:            ok = OrdenarAtaqueGeneral(); break;
             case AccionRL.AsaltarRecolectoresEnemigos:  ok = AsaltarEconomiaEnemiga(); break;
             case AccionRL.DefenderBase:                 ok = OrdenarDefensa(); break;
+            case AccionRL.ProtegerRecolectores:         ok = ProtegerRecolectores(); break;
         }
 
         if (!ok) recompensaAcumulada += penalizacionAccionInvalida;
@@ -411,6 +417,77 @@ public class EntornoRL : MonoBehaviour
             }
 
             if (mejor != null) c.OrdenarAtaque(mejor.transform);
+        }
+        return true;
+    }
+
+    // --- ESCOLTA DE RECOLECTORES ---
+    // DefenderBase trae al ejército al castillo, pero los recolectores trabajan
+    // lejos de él. Sin esta acción no había forma de acudir a donde está el
+    // problema cuando el rival asalta la economía en el campo.
+    bool ProtegerRecolectores()
+    {
+        AreaPartida area = MiArea();
+        if (area == null) return false;
+
+        List<Combate> ejercito = MiEjercito();
+        if (ejercito.Count == 0) return false;
+
+        // Nuestros trabajadores
+        List<Tropa> trabajadores = new List<Tropa>();
+        foreach (Tropa t in area.TropasDeEquipo(equipoAgente))
+            if (t.EsRecolector()) trabajadores.Add(t);
+
+        if (trabajadores.Count == 0) return false;
+
+        // ¿Hay algún enemigo de combate acosándolos?
+        Tropa amenaza = null;
+        Vector3 puntoDefensa = trabajadores[0].transform.position;
+        float distanciaMinima = radioAmenazaRecolectores;
+
+        foreach (Tropa enemigo in area.Tropas())
+        {
+            if (enemigo.equipo == equipoAgente) continue;
+
+            Combate ce = enemigo.GetComponent<Combate>();
+            if (ce == null || !ce.enabled) continue; // los trabajadores rivales no amenazan
+
+            foreach (Tropa trabajador in trabajadores)
+            {
+                float d = Vector3.Distance(enemigo.transform.position, trabajador.transform.position);
+                if (d < distanciaMinima)
+                {
+                    distanciaMinima = d;
+                    amenaza = enemigo;
+                    puntoDefensa = trabajador.transform.position;
+                }
+            }
+        }
+
+        if (amenaza != null)
+        {
+            // Hay acoso: todo el ejército concentra el fuego sobre el agresor
+            foreach (Combate c in ejercito) c.OrdenarAtaque(amenaza.transform);
+        }
+        else
+        {
+            // Sin amenaza: el ejército se despliega junto a los trabajadores (escolta)
+            foreach (Combate c in ejercito)
+            {
+                c.CancelarAtaque();
+
+                Tropa t = c.GetComponent<Tropa>();
+                if (t == null) continue;
+
+                Vector2 sep = Random.insideUnitCircle * 4f;
+                Vector3 destino = puntoDefensa + new Vector3(sep.x, 0, sep.y);
+
+                UnityEngine.AI.NavMeshHit hit;
+                if (UnityEngine.AI.NavMesh.SamplePosition(destino, out hit, 4f, UnityEngine.AI.NavMesh.AllAreas))
+                    destino = hit.position;
+
+                t.OrdenarMovimiento(destino);
+            }
         }
         return true;
     }
