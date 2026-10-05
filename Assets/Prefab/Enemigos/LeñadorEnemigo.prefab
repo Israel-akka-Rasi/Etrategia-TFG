@@ -225,6 +225,12 @@ MonoBehaviour:
   tiempoRecoleccion: 7.5
   capacidadCarga: 10
   radioBusquedaNavMesh: 3
+  radioLlegada: 3.5
+  margenFinalRuta: 1.5
+  radioEntrega: 5
+  radioReparto: 3
+  informeDeTiempos: 0
+  segundosEntreInformes: 60
   bonoDificultad: 1
 --- !u!1001 &2367925161126724867
 PrefabInstance:

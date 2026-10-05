@@ -4,6 +4,17 @@ using System.Collections.Generic;
 
 public class GeneradorTablero : MonoBehaviour
 {
+    [Header("Semilla del Mapa")]
+    // Con semilla fija, el mapa sale SIEMPRE igual. Imprescindible para experimentar:
+    // si cada prueba genera un mapa distinto, parte de la diferencia entre dos
+    // ejecuciones se debe a la disposición de árboles y minas, no al cambio probado.
+    // Y para comparar PPO con DQN, ambos deben jugar exactamente en los mismos mapas.
+    public bool usarSemillaFija = true;
+    public int semilla = 12345;
+    // Cada área suma su identificador a la semilla: las cuatro partidas tienen
+    // mapas distintos entre sí (más variedad para aprender), pero siempre los mismos.
+    public bool semillaDistintaPorArea = true;
+
     [Header("Dimensiones del Mapa")]
     public int anchoMapa = 50;
     public int altoMapa = 50;
@@ -46,6 +57,19 @@ public class GeneradorTablero : MonoBehaviour
 
     void Start()
     {
+        // Aislamos el generador aleatorio: guardamos su estado, generamos con
+        // nuestra semilla y lo devolvemos como estaba. Así la semilla del mapa no
+        // altera el resto de decisiones aleatorias del juego (personalidad de la
+        // IA, dispersión de tropas...).
+        Random.State estadoPrevio = Random.state;
+        if (usarSemillaFija)
+        {
+            int id = 0;
+            AreaPartida area = AreaPartida.Resolver(this);
+            if (semillaDistintaPorArea && area != null) id = area.idArea;
+            Random.InitState(semilla + id * 1000);
+        }
+
         float semillaX = Random.Range(0f, 10000f);
         float semillaZ = Random.Range(0f, 10000f);
         
@@ -54,8 +78,15 @@ public class GeneradorTablero : MonoBehaviour
 
         CalcularPosicionesBases();
         GenerarNivelProcedimental(semillaX, semillaZ, semillaAguaX, semillaAguaZ);
+
+        Random.state = estadoPrevio; // devolvemos el azar como estaba
         
-        GetComponent<NavMeshSurface>().BuildNavMesh();
+        // Horneamos SOLO nuestra jerarquía. Si la superficie recogiera toda la
+        // escena, cada área incluiría los mapas de las demás en su malla de
+        // navegación y las tropas podrían caminar de una partida a otra.
+        NavMeshSurface superficie = GetComponent<NavMeshSurface>();
+        superficie.collectObjects = CollectObjects.Children;
+        superficie.BuildNavMesh();
     }
 
     void CalcularPosicionesBases()
@@ -112,7 +143,10 @@ public class GeneradorTablero : MonoBehaviour
             for (int x = 0; x < anchoMapa; x++)
             {
                 float desplazamientoX = (z % 2 == 0) ? 0f : (distanciaX / 2f);
-                Vector3 posicion = new Vector3((x * distanciaX) + desplazamientoX, 0f, z * distanciaZ);
+                // Relativa a la posición del generador: así cada área construye su
+                // mapa donde está colocada, en lugar de todas en el origen del mundo.
+                Vector3 posicion = transform.position
+                                 + new Vector3((x * distanciaX) + desplazamientoX, 0f, z * distanciaZ);
 
                 int tipoSuelo = 1; 
                 int adornoElegido = 0; 
@@ -193,7 +227,12 @@ public class GeneradorTablero : MonoBehaviour
 
                     if (adornoElegido == 4) 
                     {
-                        CamaraControlador camara = Camera.main.GetComponent<CamaraControlador>();
+                        // Solo el área que ve el jugador controla la cámara; las demás
+                        // entrenan de fondo y no deben pelearse por ella.
+                        AreaPartida area = AreaPartida.Resolver(this);
+                        bool esVisible = (area == null) || area.esAreaVisible;
+                        CamaraControlador camara = (esVisible && Camera.main != null)
+                            ? Camera.main.GetComponent<CamaraControlador>() : null;
                         if (camara != null)
                         {
                             camara.CentrarEn(posicion);

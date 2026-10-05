@@ -228,5 +228,15 @@ public class AreaPartida : MonoBehaviour
 
         Transform destino = Contenedor();
         if (destino != null) objeto.transform.SetParent(destino, true);
+
+        // IMPORTANTE: Unity ejecuta Awake DENTRO de Instantiate, antes de que
+        // podamos darle padre. En ese momento el objeto no cuelga de ningún
+        // área, Resolver() cae en el área por defecto (Todas[0]) y se registra
+        // ALLÍ. Sin esta corrección, todo lo creado durante la partida en
+        // cualquier área acababa registrado en la misma.
+        foreach (Tropa t in objeto.GetComponentsInChildren<Tropa>(true))
+            t.CambiarArea(this);
+        foreach (EdificioReclutamiento e in objeto.GetComponentsInChildren<EdificioReclutamiento>(true))
+            e.CambiarArea(this);
     }
 }

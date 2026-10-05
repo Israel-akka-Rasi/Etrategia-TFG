@@ -1,0 +1,56 @@
+{
+    "AgenteRTS": {
+        "checkpoints": [
+            {
+                "steps": 49906,
+                "file_path": "results\\ppo_1\\AgenteRTS\\AgenteRTS-49906.onnx",
+                "reward": null,
+                "creation_time": 1789990879.4863076,
+                "auxillary_file_paths": [
+                    "results\\ppo_1\\AgenteRTS\\AgenteRTS-49906.pt"
+                ]
+            },
+            {
+                "steps": 99895,
+                "file_path": "results\\ppo_1\\AgenteRTS\\AgenteRTS-99895.onnx",
+                "reward": null,
+                "creation_time": 1789992433.6558433,
+                "auxillary_file_paths": [
+                    "results\\ppo_1\\AgenteRTS\\AgenteRTS-99895.pt"
+                ]
+            },
+            {
+                "steps": 149980,
+                "file_path": "results\\ppo_1\\AgenteRTS\\AgenteRTS-149980.onnx",
+                "reward": -1.2750000432133675,
+                "creation_time": 1789993962.7270436,
+                "auxillary_file_paths": [
+                    "results\\ppo_1\\AgenteRTS\\AgenteRTS-149980.pt"
+                ]
+            },
+            {
+                "steps": 150108,
+                "file_path": "results\\ppo_1\\AgenteRTS\\AgenteRTS-150108.onnx",
+                "reward": -1.2750000432133675,
+                "creation_time": 1789993962.7811966,
+                "auxillary_file_paths": [
+                    "results\\ppo_1\\AgenteRTS\\AgenteRTS-150108.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 150108,
+            "file_path": "results\\ppo_1\\AgenteRTS.onnx",
+            "reward": -1.2750000432133675,
+            "creation_time": 1789993962.7811966,
+            "auxillary_file_paths": [
+                "results\\ppo_1\\AgenteRTS\\AgenteRTS-150108.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.1+cpu"
+    }
+}

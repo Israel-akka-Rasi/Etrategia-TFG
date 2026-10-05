@@ -158,6 +158,7 @@ MonoBehaviour:
   madera: 40
   piedra: 0
   oro: 0
+  porcentajeDevolucion: 0.5
   poblacionActual: 1
   poblacionMaxima: 10
   poblacionPorNivel: 2

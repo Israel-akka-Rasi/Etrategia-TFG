@@ -92,7 +92,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Recurso
   tipo: 0
-  reservaHabilitada: 50
+  reservaHabilitada: 150
   cantidadPorTanda: 2
 --- !u!65 &7996842619417231257
 BoxCollider:
@@ -122,7 +122,7 @@ NavMeshObstacle:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 862546278412021516}
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Shape: 1
   m_Extents: {x: 0.66400003, y: 0.46100003, z: 0.569}

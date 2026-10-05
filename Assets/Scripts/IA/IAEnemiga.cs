@@ -55,6 +55,18 @@ public class PlanEdificio
 
 public class IAEnemiga : MonoBehaviour
 {
+    // ---- Trazas etiquetadas con el área ----
+    // Con varias partidas en paralelo, sin esta etiqueta los mensajes de las
+    // cuatro IAs se mezclarían en la consola y sería imposible seguir cada una.
+    string EtiquetaArea()
+    {
+        AreaPartida area = AreaPartida.Resolver(this);
+        return (area != null) ? $"[A{area.idArea}] " : "";
+    }
+
+    void LogIA(string mensaje) { Debug.Log(EtiquetaArea() + mensaje); }
+    void AvisoIA(string mensaje) { Debug.LogWarning(EtiquetaArea() + mensaje); }
+
     private BaseMilitar miBase;
 
     [Header("Estrategia Actual")]
@@ -221,7 +233,7 @@ public class IAEnemiga : MonoBehaviour
         miBase.piedra += piedraExtraInicio;
         miBase.oro += oroExtraInicio;
 
-        Debug.Log($"IAEnemiga: ventaja inicial aplicada (M:{maderaExtraInicio} P:{piedraExtraInicio} O:{oroExtraInicio}).");
+        LogIA($"IAEnemiga: ventaja inicial aplicada (M:{maderaExtraInicio} P:{piedraExtraInicio} O:{oroExtraInicio}).");
     }
 
     // ====================================================================
@@ -406,7 +418,7 @@ public class IAEnemiga : MonoBehaviour
         if (guardia == null) return false; // no le llega: seguirá con lo suyo
 
         RegistrarCaballero(guardia);
-        Debug.Log($"IAEnemiga: guardia de la base reclutado ({CaballerosVivos()}/{objetivo}).");
+        LogIA($"IAEnemiga: guardia de la base reclutado ({CaballerosVivos()}/{objetivo}).");
         return true;
     }
 
@@ -427,7 +439,7 @@ public class IAEnemiga : MonoBehaviour
             if (nuevo != null)
             {
                 RegistrarLeñador(nuevo);
-                Debug.Log($"IAEnemiga: repuesto LEÑADOR caído ({LeñadoresVivos()}/{limiteRecolectores}).");
+                LogIA($"IAEnemiga: repuesto LEÑADOR caído ({LeñadoresVivos()}/{limiteRecolectores}).");
                 return true;
             }
             return false; // no le llega: ahorra, pero no bloquea el resto
@@ -451,7 +463,7 @@ public class IAEnemiga : MonoBehaviour
                 if (nuevo != null)
                 {
                     plan.Registrar(nuevo);
-                    Debug.Log($"IAEnemiga: repuesto trabajador de '{plan.nombre}' ({plan.Vivas()}/{plan.tropasAReclutar}).");
+                    LogIA($"IAEnemiga: repuesto trabajador de '{plan.nombre}' ({plan.Vivas()}/{plan.tropasAReclutar}).");
                     return true;
                 }
                 return false;
@@ -468,7 +480,7 @@ public class IAEnemiga : MonoBehaviour
             if (nuevo != null)
             {
                 RegistrarCaballero(nuevo);
-                Debug.Log($"IAEnemiga: repuesto CABALLERO caído ({CaballerosVivos()}/{cantidadCaballeros}).");
+                LogIA($"IAEnemiga: repuesto CABALLERO caído ({CaballerosVivos()}/{cantidadCaballeros}).");
                 return true;
             }
             return false;
@@ -490,7 +502,7 @@ public class IAEnemiga : MonoBehaviour
                 {
                     plan.Registrar(nuevo);
                     miEjercito.Add(new MiembroEjercito(nuevo, plan.rolFormacion));
-                    Debug.Log($"IAEnemiga: repuesto soldado de '{plan.nombre}' ({plan.Vivas()}/{plan.tropasAReclutar}).");
+                    LogIA($"IAEnemiga: repuesto soldado de '{plan.nombre}' ({plan.Vivas()}/{plan.tropasAReclutar}).");
                     return true;
                 }
                 return false;
@@ -515,7 +527,7 @@ public class IAEnemiga : MonoBehaviour
         // volverá a lanzarse en vez de quedarse preparándose indefinidamente.
         if (tiempoDePartida >= proximoAtaqueForzoso && faseActual != FaseEstrategia.Asedio)
         {
-            Debug.LogWarning($"IAEnemiga: se acabó el tiempo de preparación. ¡ATAQUE FORZOSO con {miEjercito.Count} unidades!");
+            AvisoIA($"IAEnemiga: se acabó el tiempo de preparación. ¡ATAQUE FORZOSO con {miEjercito.Count} unidades!");
             faseActual = FaseEstrategia.Asedio;
             proximoAtaqueForzoso = tiempoDePartida + segundosEntreAtaquesForzosos;
             ciclosEnFase = 0;
@@ -531,7 +543,7 @@ public class IAEnemiga : MonoBehaviour
             // valía antes del ataque forzoso, y después se quedaba muerta de pie).
             if (miEjercito.Count == 0)
             {
-                Debug.Log("IAEnemiga: me he quedado sin ejército, vuelvo a reclutar.");
+                LogIA("IAEnemiga: me he quedado sin ejército, vuelvo a reclutar.");
                 enFormacion = false; cargando = false; ciclosEnFase = 0;
                 faseActual = FaseEstrategia.PreparacionMilitar;
                 return;
@@ -555,7 +567,7 @@ public class IAEnemiga : MonoBehaviour
             // Si lleva demasiado sin resolverse, rehacemos formación y volvemos a cargar.
             if (ciclosEnFase >= ciclosMaximosPorFase)
             {
-                Debug.LogWarning("IAEnemiga: el asalto está atascado, reorganizo y vuelvo a cargar.");
+                AvisoIA("IAEnemiga: el asalto está atascado, reorganizo y vuelvo a cargar.");
                 enFormacion = false; cargando = false; ciclosEnFormacion = 0; ciclosEnFase = 0;
             }
             return;
@@ -576,25 +588,25 @@ public class IAEnemiga : MonoBehaviour
         switch (faseActual)
         {
             case FaseEstrategia.Economia:
-                Debug.LogWarning("IAEnemiga: economía atascada, paso a construir de todos modos.");
+                AvisoIA("IAEnemiga: economía atascada, paso a construir de todos modos.");
                 faseActual = FaseEstrategia.Construccion;
                 break;
 
             case FaseEstrategia.Construccion:
                 // No puede pagar/colocar este edificio: lo salta y sigue con el plan
-                Debug.LogWarning($"IAEnemiga: no consigo avanzar con el edificio {planActual}, lo salto.");
+                AvisoIA($"IAEnemiga: no consigo avanzar con el edificio {planActual}, lo salto.");
                 planActual++;
                 if (planActual >= planConstruccion.Count)
                     faseActual = FaseEstrategia.PreparacionMilitar;
                 break;
 
             case FaseEstrategia.PreparacionMilitar:
-                Debug.LogWarning($"IAEnemiga: no puedo completar el ejército ({miEjercito.Count}), salgo con lo que hay.");
+                AvisoIA($"IAEnemiga: no puedo completar el ejército ({miEjercito.Count}), salgo con lo que hay.");
                 faseActual = FaseEstrategia.Expedicion;
                 break;
 
             case FaseEstrategia.Expedicion:
-                Debug.LogWarning("IAEnemiga: expediciones atascadas, paso directamente al asalto.");
+                AvisoIA("IAEnemiga: expediciones atascadas, paso directamente al asalto.");
                 faseActual = FaseEstrategia.Asedio;
                 break;
         }
@@ -626,7 +638,7 @@ public class IAEnemiga : MonoBehaviour
                 cargando = false;
                 ciclosEnFormacion = 0;
 
-                Debug.Log($"IAEnemiga: territorio despejado, retomando la fase {faseActual}.");
+                LogIA($"IAEnemiga: territorio despejado, retomando la fase {faseActual}.");
             }
             return false;
         }
@@ -635,7 +647,7 @@ public class IAEnemiga : MonoBehaviour
         if (!defendiendoAhora)
         {
             defendiendoAhora = true;
-            Debug.Log($"IAEnemiga: ¡ENEMIGOS EN LA BASE! Tropas a defender (sigo con {faseActual}).");
+            LogIA($"IAEnemiga: ¡ENEMIGOS EN LA BASE! Tropas a defender (sigo con {faseActual}).");
         }
 
         miEjercito.RemoveAll(m => m.objeto == null);
@@ -696,6 +708,15 @@ public class IAEnemiga : MonoBehaviour
         if (!subirNivelAutomatico) return;
         if (miBase.nivelCastillo >= nivelObjetivo) return; // ya llegó al objetivo
 
+        // Mientras levanta su economía y su plan de construcción, NO sube de nivel
+        // por iniciativa propia. Antes lo hacía siempre que podía pagarlo, y se
+        // gastaba en un nivel que aún no necesitaba justo los recursos que le
+        // faltaban para el edificio que estaba ahorrando: acababa saltándose
+        // edificios. Durante el plan ya sube cuando hace falta, por dos vías:
+        // cuando un edificio exige más nivel (TieneNivel) y cuando se queda sin
+        // población (HayHuecoPoblacion).
+        if (faseActual == FaseEstrategia.Economia || faseActual == FaseEstrategia.Construccion) return;
+
         IntentarSubirNivel();
     }
 
@@ -732,7 +753,7 @@ public class IAEnemiga : MonoBehaviour
             // Si la población está llena, la IA sube de nivel para hacer hueco
             if (!HayHuecoPoblacion())
             {
-                Debug.Log("IAEnemiga: población llena, ahorrando para mejorar el castillo...");
+                LogIA("IAEnemiga: población llena, ahorrando para mejorar el castillo...");
                 return;
             }
 
@@ -740,17 +761,17 @@ public class IAEnemiga : MonoBehaviour
             if (leñador != null)
             {
                 RegistrarLeñador(leñador);
-                Debug.Log($"IAEnemiga: Leñador reclutado ({LeñadoresVivos()}/{limiteRecolectores}).");
+                LogIA($"IAEnemiga: Leñador reclutado ({LeñadoresVivos()}/{limiteRecolectores}).");
             }
             else
             {
-                Debug.Log("IAEnemiga: esperando recursos para leñador...");
+                LogIA("IAEnemiga: esperando recursos para leñador...");
             }
         }
         else
         {
             faseActual = FaseEstrategia.Construccion;
-            Debug.Log("IAEnemiga: ¡Pasando a Fase de Construcción!");
+            LogIA("IAEnemiga: ¡Pasando a Fase de Construcción!");
         }
     }
 
@@ -761,7 +782,7 @@ public class IAEnemiga : MonoBehaviour
         if (planActual >= planConstruccion.Count)
         {
             faseActual = FaseEstrategia.PreparacionMilitar;
-            Debug.Log("IAEnemiga: Plan de construcción completo. ¡A lo militar!");
+            LogIA("IAEnemiga: Plan de construcción completo. ¡A lo militar!");
             return;
         }
 
@@ -772,7 +793,7 @@ public class IAEnemiga : MonoBehaviour
         {
             if (plan.prefabEdificio == null)
             {
-                Debug.LogWarning($"IAEnemiga: '{plan.nombre}' no tiene prefab asignado, lo salto.");
+                AvisoIA($"IAEnemiga: '{plan.nombre}' no tiene prefab asignado, lo salto.");
                 planActual++;
                 return;
             }
@@ -782,7 +803,7 @@ public class IAEnemiga : MonoBehaviour
             EdificioReclutamiento datos = EdificioReclutamiento.DatosDePrefab(plan.prefabEdificio);
             if (datos == null)
             {
-                Debug.LogWarning($"IAEnemiga: el prefab de '{plan.nombre}' no tiene EdificioReclutamiento, lo salto.");
+                AvisoIA($"IAEnemiga: el prefab de '{plan.nombre}' no tiene EdificioReclutamiento, lo salto.");
                 planActual++;
                 return;
             }
@@ -791,7 +812,7 @@ public class IAEnemiga : MonoBehaviour
             if (!TieneNivel(datos.nivelRequerido))
             {
                 ahorrandoParaEdificio = true; // esperando nivel, no atascada
-                Debug.Log($"IAEnemiga: '{plan.nombre}' requiere nivel {datos.nivelRequerido} (tengo {miBase.nivelCastillo}). Mejorando castillo...");
+                LogIA($"IAEnemiga: '{plan.nombre}' requiere nivel {datos.nivelRequerido} (tengo {miBase.nivelCastillo}). Mejorando castillo...");
                 return;
             }
 
@@ -799,7 +820,7 @@ public class IAEnemiga : MonoBehaviour
             // pasarse medio minuto juntando recursos para un edificio sin sitio.
             if (!HayAnclajeLibre())
             {
-                Debug.LogWarning($"IAEnemiga: no queda sitio para '{plan.nombre}', lo salto sin ahorrar.");
+                AvisoIA($"IAEnemiga: no queda sitio para '{plan.nombre}', lo salto sin ahorrar.");
                 ahorrandoParaEdificio = false;
                 planActual++;
                 return;
@@ -810,7 +831,7 @@ public class IAEnemiga : MonoBehaviour
             if (!datos.PuedeConstruirlo(miBase, out motivo))
             {
                 ahorrandoParaEdificio = true; // no está atascada, está ahorrando
-                Debug.Log($"IAEnemiga: no puede construir '{plan.nombre}': {motivo}. Ahorrando...");
+                LogIA($"IAEnemiga: no puede construir '{plan.nombre}': {motivo}. Ahorrando...");
                 return;
             }
 
@@ -820,14 +841,14 @@ public class IAEnemiga : MonoBehaviour
 
             if (plan.edificioConstruido == null)
             {
-                Debug.Log($"IAEnemiga: no pude construir '{plan.nombre}' (sin hueco libre), lo salto.");
+                LogIA($"IAEnemiga: no pude construir '{plan.nombre}' (sin hueco libre), lo salto.");
                 planActual++;
                 return;
             }
 
             // Construido: ahora se cobra el precio
             plan.edificioConstruido.CobrarConstruccion(miBase);
-            Debug.Log($"IAEnemiga: '{plan.nombre}' construido (M:{datos.costeConstruccionMadera} P:{datos.costeConstruccionPiedra} O:{datos.costeConstruccionOro}).");
+            LogIA($"IAEnemiga: '{plan.nombre}' construido (M:{datos.costeConstruccionMadera} P:{datos.costeConstruccionPiedra} O:{datos.costeConstruccionOro}).");
             return;
         }
 
@@ -842,7 +863,7 @@ public class IAEnemiga : MonoBehaviour
                 // Si lo tratáramos como atasco, saltaríamos el edificio económico
                 // y nos quedaríamos sin su recurso el resto de la partida.
                 ahorrandoParaEdificio = true;
-                Debug.Log("IAEnemiga: población llena, mejorando castillo para sacar más recolectores...");
+                LogIA("IAEnemiga: población llena, mejorando castillo para sacar más recolectores...");
                 return;
             }
             ahorrandoParaEdificio = false;
@@ -851,7 +872,7 @@ public class IAEnemiga : MonoBehaviour
             if (tropa != null)
             {
                 plan.Registrar(tropa);
-                Debug.Log($"IAEnemiga: recolector {plan.Vivas()}/{plan.tropasAReclutar} de '{plan.nombre}'.");
+                LogIA($"IAEnemiga: recolector {plan.Vivas()}/{plan.tropasAReclutar} de '{plan.nombre}'.");
             }
             return;
         }
@@ -873,7 +894,7 @@ public class IAEnemiga : MonoBehaviour
             // Si la población está llena, la IA sube de nivel para hacer hueco
             if (!HayHuecoPoblacion())
             {
-                Debug.Log("IAEnemiga: población llena, mejorando castillo para el ejército...");
+                LogIA("IAEnemiga: población llena, mejorando castillo para el ejército...");
                 return;
             }
 
@@ -881,11 +902,11 @@ public class IAEnemiga : MonoBehaviour
             if (caballero != null)
             {
                 RegistrarCaballero(caballero);
-                Debug.Log($"IAEnemiga: caballero {CaballerosVivos()}/{cantidadCaballeros} reclutado.");
+                LogIA($"IAEnemiga: caballero {CaballerosVivos()}/{cantidadCaballeros} reclutado.");
             }
             else
             {
-                Debug.Log($"IAEnemiga: esperando MADERA para caballero (tiene {miBase.madera}, cuesta {miBase.costeCaballero}).");
+                LogIA($"IAEnemiga: esperando MADERA para caballero (tiene {miBase.madera}, cuesta {miBase.costeCaballero}).");
             }
             return;
         }
@@ -901,7 +922,7 @@ public class IAEnemiga : MonoBehaviour
             {
                 if (!HayHuecoPoblacion())
                 {
-                    Debug.Log("IAEnemiga: población llena, mejorando castillo para el ejército...");
+                    LogIA("IAEnemiga: población llena, mejorando castillo para el ejército...");
                     return;
                 }
 
@@ -910,7 +931,7 @@ public class IAEnemiga : MonoBehaviour
                 {
                     plan.Registrar(tropa);
                     miEjercito.Add(new MiembroEjercito(tropa, plan.rolFormacion));
-                    Debug.Log($"IAEnemiga: {plan.nombre} {plan.Vivas()}/{plan.tropasAReclutar} (ejército: {miEjercito.Count}).");
+                    LogIA($"IAEnemiga: {plan.nombre} {plan.Vivas()}/{plan.tropasAReclutar} (ejército: {miEjercito.Count}).");
                 }
                 return; // una tropa por decisión, para que se note la progresión
             }
@@ -918,7 +939,7 @@ public class IAEnemiga : MonoBehaviour
 
         // 3. Ejército completo -> a hacer expediciones antes de atacar
         faseActual = FaseEstrategia.Expedicion;
-        Debug.Log($"IAEnemiga: ¡EJÉRCITO LISTO ({miEjercito.Count} unidades)! Empezando expediciones.");
+        LogIA($"IAEnemiga: ¡EJÉRCITO LISTO ({miEjercito.Count} unidades)! Empezando expediciones.");
     }
 
     // --- FASE EXPEDICIÓN: el grueso aguanta en el castillo y sale una partida pequeña a explorar ---
@@ -937,7 +958,7 @@ public class IAEnemiga : MonoBehaviour
             {
                 partidaFuera.Clear();
                 faseActual = FaseEstrategia.Asedio;
-                Debug.Log($"IAEnemiga: expediciones completas. ¡Preparando asalto con {miEjercito.Count} unidades!");
+                LogIA($"IAEnemiga: expediciones completas. ¡Preparando asalto con {miEjercito.Count} unidades!");
                 LogicaAsedio();
                 return;
             }
@@ -946,7 +967,7 @@ public class IAEnemiga : MonoBehaviour
             // volvemos a reclutar. (Antes esto encadenaba expediciones 4/3, 5/3...)
             partidaFuera.Clear();
             faseActual = FaseEstrategia.PreparacionMilitar;
-            Debug.Log($"IAEnemiga: solo tengo {miEjercito.Count}/{tropasMinimasAtacar} tropas. Vuelvo a reclutar antes de atacar.");
+            LogIA($"IAEnemiga: solo tengo {miEjercito.Count}/{tropasMinimasAtacar} tropas. Vuelvo a reclutar antes de atacar.");
             return;
         }
 
@@ -961,7 +982,7 @@ public class IAEnemiga : MonoBehaviour
             }
             partidaFuera.Clear();
             expedicionesHechas++;
-            Debug.Log($"IAEnemiga: expedición {expedicionesHechas}/{expedicionesObjetivo} de vuelta al castillo.");
+            LogIA($"IAEnemiga: expedición {expedicionesHechas}/{expedicionesObjetivo} de vuelta al castillo.");
             return;
         }
 
@@ -976,7 +997,7 @@ public class IAEnemiga : MonoBehaviour
             if (partidaFuera.Count == 0)
             {
                 expedicionesHechas++;
-                Debug.Log($"IAEnemiga: ejército demasiado pequeño para explorar, expedición {expedicionesHechas}/{expedicionesObjetivo} omitida.");
+                LogIA($"IAEnemiga: ejército demasiado pequeño para explorar, expedición {expedicionesHechas}/{expedicionesObjetivo} omitida.");
                 return;
             }
 
@@ -987,7 +1008,7 @@ public class IAEnemiga : MonoBehaviour
                 Vector2 sep = Random.insideUnitCircle * 1.5f;
                 t.OrdenarMovimiento(destino + new Vector3(sep.x, 0, sep.y));
             }
-            Debug.Log($"IAEnemiga: partida de exploración saliendo ({partidaFuera.Count} tropas).");
+            LogIA($"IAEnemiga: partida de exploración saliendo ({partidaFuera.Count} tropas).");
         }
     }
 
@@ -1057,7 +1078,7 @@ public class IAEnemiga : MonoBehaviour
         {
             if (miEjercito.Count < Mathf.CeilToInt(picoEjercito * umbralRetirada))
             {
-                Debug.Log($"IAEnemiga: asalto fracasado ({miEjercito.Count}/{picoEjercito}). ¡RETIRADA! Rehaciendo el ejército.");
+                LogIA($"IAEnemiga: asalto fracasado ({miEjercito.Count}/{picoEjercito}). ¡RETIRADA! Rehaciendo el ejército.");
                 Retirarse();
                 return;
             }
@@ -1066,7 +1087,7 @@ public class IAEnemiga : MonoBehaviour
         BaseMilitar baseEnemiga = BuscarBaseEnemiga();
         if (baseEnemiga == null)
         {
-            Debug.Log("Comandante Rojo: no encuentro base enemiga que asediar.");
+            LogIA("Comandante Rojo: no encuentro base enemiga que asediar.");
             return;
         }
 
@@ -1088,7 +1109,7 @@ public class IAEnemiga : MonoBehaviour
             ColocarEnFormacion(baseEnemiga.transform);
             enFormacion = true;
             ciclosEnFormacion = 0;
-            Debug.Log("Comandante Rojo: tropas tomando formación de asalto.");
+            LogIA("Comandante Rojo: tropas tomando formación de asalto.");
             return;
         }
 
@@ -1103,7 +1124,7 @@ public class IAEnemiga : MonoBehaviour
                 if (c != null) c.OrdenarAsedio(baseEnemiga.transform);
             }
             cargando = true;
-            Debug.Log($"Comandante Rojo: ¡CARGA! Asaltando {baseEnemiga.gameObject.name} con {miEjercito.Count} soldados.");
+            LogIA($"Comandante Rojo: ¡CARGA! Asaltando {baseEnemiga.gameObject.name} con {miEjercito.Count} soldados.");
         }
     }
 
@@ -1139,7 +1160,7 @@ public class IAEnemiga : MonoBehaviour
         intervaloReal = ritmo;
         InvokeRepeating("TomarDecisionEstrategica", ritmo, ritmo);
 
-        Debug.Log($"IAEnemiga: personalidad de esta partida -> expediciones {expedicionesObjetivo}, ataca con {tropasMinimasAtacar}, ritmo {ritmo:F1}s.");
+        LogIA($"IAEnemiga: personalidad de esta partida -> expediciones {expedicionesObjetivo}, ataca con {tropasMinimasAtacar}, ritmo {ritmo:F1}s.");
     }
 
     // Manda a los supervivientes de vuelta a casa y vuelve a fase militar
@@ -1310,11 +1331,11 @@ public class IAEnemiga : MonoBehaviour
         int necesarios = planConstruccion.Count;
         if (puntosDeAnclaje.Count < necesarios)
         {
-            Debug.LogWarning($"IAEnemiga: solo {puntosDeAnclaje.Count} huecos para {necesarios} edificios. Reintento con menos exigencias.");
+            AvisoIA($"IAEnemiga: solo {puntosDeAnclaje.Count} huecos para {necesarios} edificios. Reintento con menos exigencias.");
             GenerarAnclajesRelajados(necesarios);
         }
 
-        Debug.Log($"IAEnemiga: Se han generado {puntosDeAnclaje.Count} huecos de construcción válidos.");
+        LogIA($"IAEnemiga: Se han generado {puntosDeAnclaje.Count} huecos de construcción válidos.");
     }
 
     // ¿Queda algún anclaje sin ocupar? (solo consulta, no reserva)

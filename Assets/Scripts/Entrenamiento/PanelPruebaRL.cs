@@ -6,6 +6,9 @@ using UnityEngine;
 // en tiempo real las observaciones y la recompensa. Sirve para verificar que
 // el entorno funciona ANTES de conectar ML-Agents.
 //
+// También sirve para VER JUGAR a un modelo entrenado: muestra la última acción
+// que ha elegido el agente y el recuento de acciones de la partida en curso.
+//
 // Se dibuja con OnGUI, así que no hay que montar nada en el Canvas.
 // Desactiva este script para las pruebas de juego normal.
 // ============================================================================
@@ -23,17 +26,27 @@ public class PanelPruebaRL : MonoBehaviour
     public float segundosEntreAcciones = 1f;
 
     private EntornoRL entorno;
+    private AreaPartida areaObservada; // la elegida con los atajos 1..4 de la cámara
 
-    // Entorno del área visible (el que estamos observando)
+    // Entorno del área que estamos observando (por defecto, la visible)
     EntornoRL Entorno()
     {
         if (entorno != null) return entorno;
 
-        AreaPartida area = AreaPartida.AreaVisible();
+        AreaPartida area = areaObservada != null ? areaObservada : AreaPartida.AreaVisible();
         if (area != null) entorno = area.Entorno();
         if (entorno == null) entorno = FindObjectOfType<EntornoRL>();
 
         return entorno;
+    }
+
+    // Cambia el área que muestra el panel (lo llaman los atajos de la cámara)
+    public void ObservarArea(AreaPartida area)
+    {
+        if (area == null) return;
+        areaObservada = area;
+        entorno = area.Entorno();
+        ReiniciarContadores();
     }
 
     // Recuento por acción, para saber cuáles funcionan y cuáles fallan siempre
@@ -153,8 +166,28 @@ public class PanelPruebaRL : MonoBehaviour
         GUILayout.BeginArea(new Rect(10, 10, 330, Screen.height - 20), GUI.skin.box);
         scroll = GUILayout.BeginScrollView(scroll);
 
-        GUILayout.Label("<b>ENTORNO RL — PRUEBA MANUAL</b>", EstiloTitulo());
-        GUILayout.Label($"F1 oculta este panel");
+        AreaPartida areaPanel = Entorno().MiArea();
+        string idPanel = (areaPanel != null) ? areaPanel.idArea.ToString() : "?";
+        GUILayout.Label($"<b>ENTORNO RL — ÁREA {idPanel}</b>", EstiloTitulo());
+        GUILayout.Label($"F1 oculta este panel · 1-4 cambia de área");
+        GUILayout.Space(6);
+
+        // --- Lo que está haciendo el agente (útil al ver jugar un modelo) ---
+        // ultimoResultado lo escribe el entorno en CADA acción, venga del
+        // agente entrenado o de los botones de abajo.
+        GUILayout.Label("<b>Agente</b>", EstiloTitulo());
+        GUILayout.Label($"Última acción: {Entorno().ultimoResultado}");
+
+        int[] lanzadas = Entorno().AccionesLanzadasEpisodio();
+        int[] validas = Entorno().AccionesValidasEpisodio();
+        string[] nombresAcc = System.Enum.GetNames(typeof(AccionRL));
+        GUILayout.Label("Partida en curso (válidas / elegidas):");
+        for (int i = 0; i < lanzadas.Length; i++)
+        {
+            if (lanzadas[i] == 0) continue;
+            string nombre = (i < nombresAcc.Length) ? nombresAcc[i] : ("accion" + i);
+            GUILayout.Label($"   {i,2}. {nombre}: {validas[i]}/{lanzadas[i]}");
+        }
         GUILayout.Space(6);
 
         // --- Botones de acción ---
@@ -166,7 +199,7 @@ public class PanelPruebaRL : MonoBehaviour
         }
 
         GUILayout.Space(8);
-        GUILayout.Label($"Última: {ultimaAccion}");
+        GUILayout.Label($"Última (botones): {ultimaAccion}");
 
         // --- Recompensa ---
         GUILayout.Space(8);

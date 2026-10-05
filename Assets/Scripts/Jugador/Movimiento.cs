@@ -117,6 +117,17 @@ void Update()
 
             Recurso recursoTocado = impacto.collider.GetComponentInParent<Recurso>(); // <--- NUEVO
             Vector3 destinoCentral = impacto.point;
+            
+            // DEPURACIÓN: avisar si el clic no va a producir ninguna orden
+            bool esSuelo = impacto.collider.CompareTag("Transitable");
+            bool esEnemigo = (enemigoTocado != null && enemigoTocado.equipo == 1) || (baseTocada != null && baseTocada.equipo == 1);
+            if (recursoTocado == null && !esSuelo && !esEnemigo)
+                Debug.LogWarning($"DEPURACION clic derecho SIN EFECTO: tocó '{impacto.collider.name}' " +
+                                 $"(etiqueta '{impacto.collider.tag}', capa '{LayerMask.LayerToName(impacto.collider.gameObject.layer)}').");
+            // Punto de SUELO bajo el cursor, aunque el rayo haya tocado antes una
+            // tropa propia u otro objeto: así la orden de mover nunca se pierde.
+            bool haySuelo = Physics.Raycast(rayo, out RaycastHit golpeSuelo, Mathf.Infinity, LayerMask.GetMask("Suelo"));
+            if (haySuelo) destinoCentral = golpeSuelo.point;
 
             float radioDeLlegada = 0.5f + (Mathf.Sqrt(tropasSeleccionadas.Count) * 0.4f); 
 
@@ -174,7 +185,7 @@ void Update()
                     if (scriptCombate != null) scriptCombate.OrdenarAtaque(tObjetivo);
                 }
                 // 3. ORDEN DE MOVIMIENTO AL SUELO
-                else if (impacto.collider.CompareTag("Transitable"))
+                else if (haySuelo)
                 {
                     if (scriptRecolector != null) scriptRecolector.DetenerTrabajo();
                     if (scriptCombate != null) scriptCombate.CancelarAtaque();

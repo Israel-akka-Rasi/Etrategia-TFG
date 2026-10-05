@@ -21,6 +21,31 @@ public class RecolectorIA : MonoBehaviour
     public int capacidadCarga = 10;          // Cuánto trae en cada viaje
     public float radioBusquedaNavMesh = 3f;  // Punto caminable junto al recurso (no el tronco/roca)
 
+    // Distancia EN LÍNEA RECTA a la que se da por llegado al recurso o a la base.
+    // Es la misma estrategia que usa el recolector del jugador, y es robusta a
+    // simulaciones aceleradas: con la escala de tiempo alta, cada fotograma avanza
+    // mucho tiempo de juego, el agente se pasa de su punto exacto de parada y la
+    // comprobación del NavMesh no llega a detectar nunca la llegada.
+    public float radioLlegada = 3.5f;
+    // Distancia al punto final de su ruta a la que se da por llegado
+    public float margenFinalRuta = 1.5f;
+
+    // Distancia AL CENTRO DEL CASTILLO a la que se entrega la carga. Es mayor que
+    // la del árbol porque el castillo es un edificio grande: medir con el mismo
+    // margen que un árbol hacía que el recolector llegara a la pared sin cumplirlo.
+    public float radioEntrega = 5f;
+
+    // Los recolectores no van todos al mismo punto del castillo, sino a uno
+    // distinto a su alrededor. Si van al mismo, se amontonan y se empujan entre
+    // ellos, y a velocidades altas ese forcejeo les impide llegar a entregar.
+    public float radioReparto = 3f;
+
+    [Header("Diagnóstico")]
+    // Cada cierto tiempo de juego informa de en qué ha gastado el tiempo.
+    // Sirve para localizar en qué fase del ciclo se atasca la recolección.
+    public bool informeDeTiempos = true;
+    public float segundosEntreInformes = 60f;
+
     [Header("Ventaja de la IA")]
     public float bonoDificultad = 1.2f; // 1.2 = 20% más rápido
 
@@ -98,6 +123,17 @@ public class RecolectorIA : MonoBehaviour
         tiempoSinAvanzar = 0f;
     }
 
+    // Lleva la unidad al punto caminable más cercano si ha quedado fuera de la malla
+    void RecolocarEnNavMesh()
+    {
+        UnityEngine.AI.NavMeshHit hit;
+        if (UnityEngine.AI.NavMesh.SamplePosition(transform.position, out hit, 5f, UnityEngine.AI.NavMesh.AllAreas))
+        {
+            agente.Warp(hit.position);
+            estadoActual = EstadoRecolector.Buscando; // retoma su ciclo desde el principio
+        }
+    }
+
     // Devuelve true si lleva demasiado tiempo sin acercarse a su destino
     bool EstaAtascado()
     {
@@ -115,8 +151,38 @@ public class RecolectorIA : MonoBehaviour
         return tiempoSinAvanzar > SEGUNDOS_PARA_ATASCO;
     }
 
+    // --- Diagnóstico: cuánto tiempo pasa en cada estado ---
+    private readonly float[] tiempoEnEstado = new float[4];
+    private int entregasPeriodo = 0;
+    private float relojInforme = 0f;
+
+    void AcumularDiagnostico()
+    {
+        if (!informeDeTiempos) return;
+
+        tiempoEnEstado[(int)estadoActual] += Time.deltaTime;
+        relojInforme += Time.deltaTime;
+        if (relojInforme < segundosEntreInformes) return;
+
+        AreaPartida area = AreaPartida.Resolver(this);
+        string etiqueta = (area != null) ? $"[A{area.idArea}] " : "";
+        float total = relojInforme;
+        Debug.Log($"{etiqueta}DIAG {name.Replace("(Clone)", "")}: " +
+                  $"buscando {100 * tiempoEnEstado[0] / total:0}% | " +
+                  $"camino al recurso {100 * tiempoEnEstado[1] / total:0}% | " +
+                  $"trabajando {100 * tiempoEnEstado[2] / total:0}% | " +
+                  $"volviendo {100 * tiempoEnEstado[3] / total:0}% | " +
+                  $"entregas {entregasPeriodo} en {total:0} s");
+
+        for (int i = 0; i < tiempoEnEstado.Length; i++) tiempoEnEstado[i] = 0f;
+        entregasPeriodo = 0;
+        relojInforme = 0f;
+    }
+
     void Update()
     {
+        AcumularDiagnostico();
+
         switch (estadoActual)
         {
             case EstadoRecolector.Buscando:
@@ -171,8 +237,9 @@ public class RecolectorIA : MonoBehaviour
             NavMeshHit hit;
             if (NavMesh.SamplePosition(objetivoActual.position, out hit, radioBusquedaNavMesh, NavMesh.AllAreas))
             {
-                agente.SetDestination(hit.position);
-                estadoActual = EstadoRecolector.CaminandoAlRecurso;
+                // Solo pasamos a caminar si la orden se ha podido dar de verdad
+                if (NavegacionSegura.IrA(agente, hit.position))
+                    estadoActual = EstadoRecolector.CaminandoAlRecurso;
             }
             // Si no hay punto válido, seguimos en "Buscando" y probamos con otro recurso.
         }
@@ -187,7 +254,43 @@ public class RecolectorIA : MonoBehaviour
             return;
         }
 
-        if (!agente.pathPending && agente.remainingDistance <= agente.stoppingDistance)
+        // Con reinicios frecuentes y varias partidas, el agente puede estar recién
+        // creado o a punto de destruirse, fuera del NavMesh. Consultarle la distancia
+        // en ese estado es lo que llenaba la consola de errores.
+        if (agente == null || !agente.isActiveAndEnabled) return;
+
+        // Si ha quedado fuera de la malla (por ejemplo, al nacer), lo recolocamos
+        // en el punto caminable más cercano. Antes solo se ignoraba el caso para
+        // evitar errores, pero la unidad se quedaba parada para siempre y dejaba
+        // de aportar a la economía sin que nada lo indicara.
+        if (!agente.isOnNavMesh)
+        {
+            RecolocarEnNavMesh();
+            return;
+        }
+
+        // ¿Hemos llegado? Tres comprobaciones, basta con que se cumpla una:
+        //  1) Cerca del FINAL DE SU RUTA. Es la clave: el recolector no va al centro
+        //     del árbol sino a un punto caminable junto a él (hasta a 3 unidades).
+        //     Medir contra el centro del árbol fallaba cuando ese punto caía en el
+        //     lado opuesto: el agente se quedaba parado sin detectar su llegada.
+        //  2) Cerca del objetivo en línea recta (robusto a la aceleración).
+        //  3) La comprobación clásica del NavMesh.
+        Vector3 a = transform.position; a.y = 0f;
+        Vector3 b = destino.position;  b.y = 0f;
+
+        bool cercaDelFinalDeRuta = false;
+        if (agente.hasPath)
+        {
+            Vector3 fin = agente.pathEndPosition; fin.y = 0f;
+            cercaDelFinalDeRuta = Vector3.Distance(a, fin) <= margenFinalRuta;
+        }
+        // El castillo es grande: se le aplica su propio radio de entrega
+        float radio = (siguienteEstado == EstadoRecolector.Trabajando) ? radioLlegada : radioEntrega;
+        bool cercaEnLineaRecta = Vector3.Distance(a, b) <= radio;
+        bool llegadaNavMesh = !agente.pathPending && agente.remainingDistance <= agente.stoppingDistance;
+
+        if (cercaDelFinalDeRuta || cercaEnLineaRecta || llegadaNavMesh)
         {
             ReiniciarMedidorAtasco();
 
@@ -203,6 +306,8 @@ public class RecolectorIA : MonoBehaviour
         }
 
         // No ha llegado: ¿está avanzando o se ha quedado bailando en el sitio?
+        // (La llegada ya se ha comprobado arriba con margen, así que si seguimos
+        //  aquí es que de verdad estamos lejos del objetivo.)
         if (EstaAtascado())
         {
             agente.ResetPath();
@@ -250,7 +355,7 @@ public class RecolectorIA : MonoBehaviour
 
         if (recursosLlevados > 0 && miBase != null && agenteUtil)
         {
-            agente.SetDestination(miBase.transform.position);
+            NavegacionSegura.IrA(agente, PuntoDeEntrega());
             estadoActual = EstadoRecolector.VolviendoBase;
         }
         else
@@ -259,8 +364,23 @@ public class RecolectorIA : MonoBehaviour
         }
     }
 
+    // Un punto caminable alrededor del castillo, distinto para cada viaje, para
+    // repartir a los recolectores en lugar de amontonarlos en la misma puerta.
+    Vector3 PuntoDeEntrega()
+    {
+        Vector3 centro = miBase.transform.position;
+        Vector2 dir = Random.insideUnitCircle.normalized;
+        Vector3 candidato = centro + new Vector3(dir.x, 0f, dir.y) * radioReparto;
+
+        UnityEngine.AI.NavMeshHit hit;
+        if (UnityEngine.AI.NavMesh.SamplePosition(candidato, out hit, radioReparto, UnityEngine.AI.NavMesh.AllAreas))
+            return hit.position;
+        return centro; // respaldo: el comportamiento de antes
+    }
+
     void EntregarRecursos()
     {
+        entregasPeriodo++;
         // Entregamos SIEMPRE a nuestra base asignada (no a la primera que pillemos).
         if (miBase != null && recursosLlevados > 0)
         {

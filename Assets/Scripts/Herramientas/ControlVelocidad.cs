@@ -10,7 +10,9 @@ public class ControlVelocidad : MonoBehaviour
 {
     [Header("Configuración")]
     public KeyCode tecla = KeyCode.T;
-    public float[] velocidades = { 1f, 2f, 4f, 8f };
+    // Incluye 20x, que es la velocidad a la que se entrena: así se pueden
+    // reproducir las condiciones del entrenamiento sin lanzar ML-Agents.
+    public float[] velocidades = { 1f, 2f, 4f, 8f, 20f };
 
     private int indice = 0;
 

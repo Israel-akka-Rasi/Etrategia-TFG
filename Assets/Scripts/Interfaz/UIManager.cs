@@ -122,6 +122,7 @@ public class UIManager : MonoBehaviour
         txtOro.text = "Oro: " + oro;
 
         ActualizarCosteMejora();
+        RefrescarPanelConstruccion();
     }
 
     // Muestra cuánto cuesta el siguiente nivel y marca en rojo lo que falta
@@ -216,6 +217,15 @@ public class UIManager : MonoBehaviour
     {
         if (panelReclutamiento != null) panelReclutamiento.SetActive(false);
         if (panelConstruccion != null) panelConstruccion.SetActive(true);
+        RefrescarPanelConstruccion();
+    }
+
+    // Recalcula límite, nivel y recursos de los cuatro edificios. Se llama al
+    // abrir el panel y cada vez que cambia la economía: antes solo se evaluaba
+    // al abrirlo y los botones se quedaban desfasados.
+    void RefrescarPanelConstruccion()
+    {
+        if (panelConstruccion == null || !panelConstruccion.activeSelf) return;
 
         int contCampamentos = 0, contGalerias = 0, contGremios = 0, contColiseos = 0;
 
@@ -225,7 +235,7 @@ public class UIManager : MonoBehaviour
 
         foreach (EdificioReclutamiento edificio in areaUI.Edificios())
         {
-            if (edificio.equipo != 0) continue; // los del enemigo no cuentan
+            if (edificio.equipo != 0) continue;
 
             if (edificio.nombreEdificio == "Campamento Minero") contCampamentos++;
             else if (edificio.nombreEdificio == "Galeria de Tiro") contGalerias++;
@@ -233,7 +243,6 @@ public class UIManager : MonoBehaviour
             else if (edificio.nombreEdificio == "Coliseo") contColiseos++;
         }
 
-        // Ahora sí: se comprueba límite, NIVEL de castillo y RECURSOS.
         ConfigurarBotonConstruccion(botonConstruirCampamento, textoLimiteCampamento, "Campamento", contCampamentos, prefabCampamentoMineroReal);
         ConfigurarBotonConstruccion(botonConstruirGaleria, textoLimiteGaleria, "Arquería", contGalerias, prefabGaleriaTiroReal);
         ConfigurarBotonConstruccion(botonConstruirGremio, textoLimiteGremio, "Gremio", contGremios, prefabGremioComercialReal);

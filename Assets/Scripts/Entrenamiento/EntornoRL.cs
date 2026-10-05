@@ -51,6 +51,10 @@ public enum AccionRL
 
 public class EntornoRL : MonoBehaviour
 {
+    // Número de valores del vector de observaciones. Tiene que coincidir con el
+    // "Space Size" del Behavior Parameters.
+    public const int NUM_OBSERVACIONES = 22;
+
     [Header("Identidad del Agente")]
     public int equipoAgente = 0; // 0 = bando azul
 
@@ -96,8 +100,16 @@ public class EntornoRL : MonoBehaviour
     public float pesoSubirNivel = 0.05f;
     public float pesoEdificio = 0.03f;
     public float pesoUnidadPerdida = -0.01f;
-    public float penalizacionAccionInvalida = -0.002f;
-    public float penalizacionPorPaso = -0.0005f;
+    // Penalizaciones pequeñas A PROPÓSITO. Con valores mayores se acumulaban en
+    // las partidas largas hasta el punto de que arruinarse rápido puntuaba mejor
+    // que luchar y perder, y el agente acabaría aprendiendo a suicidarse.
+    public float penalizacionAccionInvalida = -0.0005f;
+    public float penalizacionPorPaso = 0f;
+
+    // Quedarse sin salida (sin recursos, recolectores ni ejército) debe ser el PEOR
+    // desenlace, peor que una derrota en combate. Si no, cortar la partida por la
+    // vía rápida resultaría más rentable que jugarla.
+    public float penalizacionSinSalida = -0.5f;
 
     // --- Contexto ---
     private AreaPartida miArea;
@@ -110,9 +122,38 @@ public class EntornoRL : MonoBehaviour
     private float saludPropiaAnterior;
     private int recursosTotalesAnterior;
     private int nivelAnterior;
-    private int edificiosAnterior;
     private int unidadesAnterior;
+
+    // Tipos de edificio ya construidos en este episodio. La recompensa por
+    // construir se paga UNA vez por tipo (al desbloquearlo), no por cada copia:
+    // en ppo_base_01 el agente levantaba ~12 Campamentos Mineros por partida
+    // solo para cobrar la recompensa de cada uno.
+    private HashSet<string> tiposEdificioConstruidos = new HashSet<string>();
     private bool finalContabilizado = false;
+
+    // ---- Métricas del episodio (para analizar QUÉ estrategia aprende) ----
+    // La recompensa dice cuánto va de bien, pero no qué hace el agente. Estas
+    // cifras permiten ver, por ejemplo, si ataca alguna vez o solo se defiende.
+    private int episodioRecursos = 0;
+    private float episodioDanoInfligido = 0f;
+    private int episodioUnidadesPerdidas = 0;
+    private int episodioNivelMaximo = 1;
+    private int episodioAtaquesLanzados = 0;
+
+    // ---- Diagnóstico de la política ----
+    // SOLO se mide: nada de esto entra en la recompensa ni en las observaciones,
+    // así que añadirlo no cambia el entorno. Sirve para saber qué acciones elige
+    // el agente, cuáles le fallan y si su economía llega a arrancar.
+    private int[] episodioAccionesLanzadas;
+    private int[] episodioAccionesValidas;
+    private int episodioDecisiones = 0;
+    private int episodioDecisionesConOciosos = 0;
+    private int episodioRecolectoresMax = 0;
+    // Control de población: unidades vivas frente al contador del castillo.
+    // Deben coincidir siempre; un desfase > 0 indicaría que el contador se ha
+    // descontado de más y el agente estaría superando el límite de población.
+    private int episodioUnidadesMax = 0;
+    private int episodioDesfasePoblacionMax = 0;
 
     [System.NonSerialized] public string ultimoResultado = "";
 
@@ -177,7 +218,7 @@ public class EntornoRL : MonoBehaviour
             case AccionRL.LicenciarRecolector: ok = Licenciar(true); break;
             case AccionRL.LicenciarSoldado:    ok = Licenciar(false); break;
 
-            case AccionRL.AtacarBaseEnemiga:            ok = OrdenarAtaqueGeneral(); break;
+            case AccionRL.AtacarBaseEnemiga:            ok = OrdenarAtaqueGeneral(); if (ok) episodioAtaquesLanzados++; break;
             case AccionRL.AsaltarRecolectoresEnemigos:  ok = AsaltarEconomiaEnemiga(); break;
             case AccionRL.DefenderBase:                 ok = OrdenarDefensa(); break;
             case AccionRL.ProtegerRecolectores:         ok = ProtegerRecolectores(); break;
@@ -185,6 +226,8 @@ public class EntornoRL : MonoBehaviour
 
         if (!ok) recompensaAcumulada += penalizacionAccionInvalida;
         recompensaAcumulada += penalizacionPorPaso;
+
+        RegistrarDecision(indiceAccion, ok);
 
         ultimoResultado = $"{accion} -> {(ok ? "OK" : "inválida")}";
         return ok;
@@ -194,6 +237,161 @@ public class EntornoRL : MonoBehaviour
     {
         return System.Enum.GetValues(typeof(AccionRL)).Length;
     }
+
+    // ========================================================================
+    // MÁSCARA DE ACCIONES
+    // Dice qué acciones son posibles AHORA, sin ejecutar nada. AgenteRTS la
+    // entrega a ML-Agents antes de cada decisión y la red solo elige entre las
+    // posibles. Cada caso repite las condiciones de su acción en EjecutarAccion:
+    // si se cambia una, hay que cambiar la otra.
+    // Dos acciones pueden fallar aun estando permitidas, porque dependen de
+    // algo que no se sabe sin intentarlo: construir (que haya un hueco libre
+    // en el terreno) y AsignarRecolectores (que quede un recurso alcanzable).
+    // ========================================================================
+    public bool[] AccionesPosibles()
+    {
+        bool[] posibles = new bool[NumeroDeAcciones()];
+        posibles[(int)AccionRL.NoHacerNada] = true; // siempre hay al menos una
+
+        if (miCastillo == null) LocalizarCastillos();
+        AreaPartida area = MiArea();
+        if (miCastillo == null || area == null) return posibles;
+
+        // Un solo recorrido por las unidades para todas las comprobaciones
+        int recolectores = 0, ociosos = 0, soldados = 0, ejercito = 0, recolectoresEnemigos = 0;
+        foreach (Tropa t in area.Tropas())
+        {
+            if (t == null) continue;
+
+            if (t.equipo != equipoAgente)
+            {
+                if (t.EsRecolector()) recolectoresEnemigos++;
+                continue;
+            }
+
+            if (t.EsRecolector())
+            {
+                recolectores++;
+                Recolector r = t.GetComponent<Recolector>();
+                if (r != null && r.EstaOcioso()) ociosos++;
+            }
+            else soldados++;
+
+            Combate c = t.GetComponent<Combate>();
+            if (c != null && c.enabled) ejercito++;
+        }
+
+        bool hayHueco = miCastillo.poblacionActual < miCastillo.poblacionMaxima;
+
+        // --- Reclutamiento ---
+        posibles[(int)AccionRL.ReclutarLenador] = hayHueco && miCastillo.prefabLeñador != null
+                                                  && miCastillo.madera >= miCastillo.costeLeñador;
+        posibles[(int)AccionRL.ReclutarCaballero] = hayHueco && miCastillo.prefabCaballero != null
+                                                    && miCastillo.madera >= miCastillo.costeCaballero;
+        posibles[(int)AccionRL.ReclutarMinero]    = hayHueco && PuedeReclutarEn("Campamento Minero");
+        posibles[(int)AccionRL.ReclutarArquero]   = hayHueco && PuedeReclutarEn("Galeria de Tiro");
+        posibles[(int)AccionRL.ReclutarTesorero]  = hayHueco && PuedeReclutarEn("Gremio Comercial");
+        posibles[(int)AccionRL.ReclutarGladiador] = hayHueco && PuedeReclutarEn("Coliseo");
+
+        // --- Construcción y progresión ---
+        posibles[(int)AccionRL.ConstruirCampamento] = PuedePagarEdificio(prefabCampamento);
+        posibles[(int)AccionRL.ConstruirGaleria]    = PuedePagarEdificio(prefabGaleria);
+        posibles[(int)AccionRL.ConstruirGremio]     = PuedePagarEdificio(prefabGremio);
+        posibles[(int)AccionRL.ConstruirColiseo]    = PuedePagarEdificio(prefabColiseo);
+        posibles[(int)AccionRL.MejorarCastillo]     = miCastillo.PuedeMejorar();
+
+        // --- Economía y reconversión ---
+        posibles[(int)AccionRL.AsignarRecolectores]  = ociosos > 0;
+        posibles[(int)AccionRL.ReplegarRecolectores] = recolectores > 0;
+        posibles[(int)AccionRL.LicenciarRecolector]  = recolectores > 0;
+        posibles[(int)AccionRL.LicenciarSoldado]     = soldados > 0;
+
+        // --- Militar ---
+        if (castilloEnemigo == null) LocalizarCastillos();
+        posibles[(int)AccionRL.AtacarBaseEnemiga]           = ejercito > 0 && castilloEnemigo != null;
+        posibles[(int)AccionRL.AsaltarRecolectoresEnemigos] = ejercito > 0 && recolectoresEnemigos > 0;
+        posibles[(int)AccionRL.DefenderBase]                = ejercito > 0;
+        posibles[(int)AccionRL.ProtegerRecolectores]        = ejercito > 0 && recolectores > 0;
+
+        return posibles;
+    }
+
+    // ¿Algún edificio propio con ese nombre puede reclutar ya? (sin mirar la población)
+    bool PuedeReclutarEn(string nombreEdificio)
+    {
+        foreach (EdificioReclutamiento e in MiArea().Edificios())
+        {
+            if (e.equipo != equipoAgente || e.nombreEdificio != nombreEdificio) continue;
+            if (e.prefabTropa == null) continue;
+
+            if (e.modoPrueba) return true; // en modo prueba reclutar es gratis
+            if (miCastillo.madera >= e.costeMadera && miCastillo.piedra >= e.costePiedra
+                && miCastillo.oro >= e.costeOro) return true;
+        }
+        return false;
+    }
+
+    // ¿Hay nivel y recursos para este edificio? (el hueco en el terreno no se comprueba)
+    bool PuedePagarEdificio(GameObject prefab)
+    {
+        EdificioReclutamiento datos = EdificioReclutamiento.DatosDePrefab(prefab);
+        string motivo;
+        return datos != null && datos.PuedeConstruirlo(miCastillo, out motivo);
+    }
+
+    // --- DIAGNÓSTICO: se anota cada decisión (no influye en nada) ---
+    void AsegurarContadores()
+    {
+        int n = NumeroDeAcciones();
+        if (episodioAccionesLanzadas == null || episodioAccionesLanzadas.Length != n)
+        {
+            episodioAccionesLanzadas = new int[n];
+            episodioAccionesValidas = new int[n];
+        }
+    }
+
+    void RegistrarDecision(int indice, bool valida)
+    {
+        AsegurarContadores();
+
+        if (indice >= 0 && indice < episodioAccionesLanzadas.Length)
+        {
+            episodioAccionesLanzadas[indice]++;
+            if (valida) episodioAccionesValidas[indice]++;
+        }
+        episodioDecisiones++;
+
+        // Estado de la economía tras la decisión: cuántos recolectores hay y si
+        // alguno está parado. Los del agente NO trabajan al nacer, así que si
+        // nunca usa AsignarRecolectores se quedan ociosos toda la partida.
+        AreaPartida area = MiArea();
+        if (area == null) return;
+
+        int recolectores = 0, ociosos = 0, unidades = 0;
+        foreach (Tropa t in area.TropasDeEquipo(equipoAgente))
+        {
+            unidades++;
+            if (!t.EsRecolector()) continue;
+            recolectores++;
+
+            Recolector r = t.GetComponent<Recolector>();
+            if (r != null && r.EstaOcioso()) ociosos++;
+        }
+
+        if (recolectores > episodioRecolectoresMax) episodioRecolectoresMax = recolectores;
+        if (ociosos > 0) episodioDecisionesConOciosos++;
+
+        if (unidades > episodioUnidadesMax) episodioUnidadesMax = unidades;
+        if (miCastillo != null)
+        {
+            int desfase = unidades - miCastillo.poblacionActual;
+            if (desfase > episodioDesfasePoblacionMax) episodioDesfasePoblacionMax = desfase;
+        }
+    }
+
+    // Recuento en vivo del episodio en curso (para el panel de pruebas)
+    public int[] AccionesLanzadasEpisodio() { AsegurarContadores(); return episodioAccionesLanzadas; }
+    public int[] AccionesValidasEpisodio() { AsegurarContadores(); return episodioAccionesValidas; }
 
     // --- CONSTRUCCIÓN (programática, sin ratón) ---
     bool ConstruirEdificio(GameObject prefabReal)
@@ -222,6 +420,10 @@ public class EntornoRL : MonoBehaviour
             edificio.equipo = equipoAgente;
             edificio.AsignarCastillo(miCastillo);
             edificio.CobrarConstruccion(miCastillo);
+
+            // Solo el PRIMER edificio de cada tipo se premia
+            if (tiposEdificioConstruidos.Add(edificio.nombreEdificio))
+                recompensaAcumulada += pesoEdificio;
         }
         return true;
     }
@@ -340,7 +542,14 @@ public class EntornoRL : MonoBehaviour
         }
 
         if (mejor == null) return false;
-        return miCastillo.LicenciarTropa(mejor);
+
+        // La devolución NO es un ingreso: se saca de la recompensa por recursos.
+        // Sin esto, reclutar y licenciar en bucle "generaba" ingresos premiados
+        // (ppo_v6_seed1: 10 % de las decisiones licenciando caballeros).
+        int antes = TotalRecursos();
+        bool ok = miCastillo.LicenciarTropa(mejor);
+        recursosTotalesAnterior += TotalRecursos() - antes;
+        return ok;
     }
 
     // --- MILITAR ---
@@ -509,6 +718,13 @@ public class EntornoRL : MonoBehaviour
     public float[] ObtenerObservaciones()
     {
         if (miCastillo == null) LocalizarCastillos();
+
+        // Si todavía no existe el castillo (por ejemplo, al arrancar, antes de
+        // que se genere el mapa), devolvemos un vector de ceros del tamaño
+        // correcto en lugar de romper. ML-Agents puede pedir observaciones en
+        // ese momento si un agente se desactiva o se cierra muy pronto.
+        if (miCastillo == null) return new float[NUM_OBSERVACIONES];
+
         AreaPartida area = MiArea();
 
         int lenadores = 0, mineros = 0, tesoreros = 0;
@@ -615,9 +831,24 @@ public class EntornoRL : MonoBehaviour
         saludEnemigaAnterior = castilloEnemigo != null ? castilloEnemigo.salud : 0f;
         recursosTotalesAnterior = TotalRecursos();
         nivelAnterior = miCastillo != null ? miCastillo.nivelCastillo : 1;
-        edificiosAnterior = ContarMisEdificios();
+        tiposEdificioConstruidos.Clear();
         unidadesAnterior = ContarMisUnidades();
         finalContabilizado = false;
+
+        episodioRecursos = 0;
+        episodioDanoInfligido = 0f;
+        episodioUnidadesPerdidas = 0;
+        episodioNivelMaximo = nivelAnterior;
+        episodioAtaquesLanzados = 0;
+
+        AsegurarContadores();
+        System.Array.Clear(episodioAccionesLanzadas, 0, episodioAccionesLanzadas.Length);
+        System.Array.Clear(episodioAccionesValidas, 0, episodioAccionesValidas.Length);
+        episodioDecisiones = 0;
+        episodioDecisionesConOciosos = 0;
+        episodioRecolectoresMax = 0;
+        episodioUnidadesMax = 0;
+        episodioDesfasePoblacionMax = 0;
     }
 
     int TotalRecursos()
@@ -652,7 +883,11 @@ public class EntornoRL : MonoBehaviour
         if (castilloEnemigo != null)
         {
             float dano = saludEnemigaAnterior - castilloEnemigo.salud;
-            if (dano > 0) recompensaAcumulada += (dano / refSaludCastillo) * pesoDanoAlEnemigo;
+            if (dano > 0)
+            {
+                recompensaAcumulada += (dano / refSaludCastillo) * pesoDanoAlEnemigo;
+                episodioDanoInfligido += dano;
+            }
             saludEnemigaAnterior = castilloEnemigo.salud;
         }
 
@@ -663,25 +898,32 @@ public class EntornoRL : MonoBehaviour
         // Economía: premiamos el ingreso, no el gasto
         int recursos = TotalRecursos();
         int ingreso = recursos - recursosTotalesAnterior;
-        if (ingreso > 0) recompensaAcumulada += ingreso * pesoRecursos;
+        if (ingreso > 0)
+        {
+            recompensaAcumulada += ingreso * pesoRecursos;
+            episodioRecursos += ingreso;
+        }
         recursosTotalesAnterior = recursos;
 
         // Progresión
+        if (miCastillo.nivelCastillo > episodioNivelMaximo) episodioNivelMaximo = miCastillo.nivelCastillo;
+
         if (miCastillo.nivelCastillo > nivelAnterior)
         {
             recompensaAcumulada += (miCastillo.nivelCastillo - nivelAnterior) * pesoSubirNivel;
             nivelAnterior = miCastillo.nivelCastillo;
         }
 
-        int edificios = ContarMisEdificios();
-        if (edificios > edificiosAnterior)
-            recompensaAcumulada += (edificios - edificiosAnterior) * pesoEdificio;
-        edificiosAnterior = edificios;
+        // (La recompensa por edificios ya no se calcula aquí: se paga en
+        // ConstruirEdificio, una sola vez por tipo.)
 
         // Bajas propias
         int unidades = ContarMisUnidades();
         if (unidades < unidadesAnterior)
+        {
             recompensaAcumulada += (unidadesAnterior - unidades) * pesoUnidadPerdida;
+            episodioUnidadesPerdidas += unidadesAnterior - unidades;
+        }
         unidadesAnterior = unidades;
 
         // Terminal (una sola vez)
@@ -689,7 +931,55 @@ public class EntornoRL : MonoBehaviour
         {
             finalContabilizado = true;
             recompensaAcumulada += AgenteHaGanado() ? recompensaVictoria : recompensaDerrota;
+
+            // Arruinarse es peor que perder peleando
+            if (EstadoSinSalida()) recompensaAcumulada += penalizacionSinSalida;
         }
+    }
+
+    // ---- Resumen del episodio, para las estadísticas de entrenamiento ----
+    // Hay que consultarlo ANTES de reiniciar, mientras el resultado sigue anotado.
+    public struct ResumenEpisodio
+    {
+        public bool victoria, empate, ruina, derrotaEnCombate;
+        public int recursos, unidadesPerdidas, nivelMaximo, edificios, ataquesLanzados;
+        public float danoInfligidoFraccion;
+
+        // Diagnóstico de la política
+        public int decisiones, recolectoresMax, unidadesMax, desfasePoblacionMax;
+        public float tasaInvalidas, fraccionConOciosos;
+        public int[] accionesLanzadas, accionesValidas;
+    }
+
+    public ResumenEpisodio ObtenerResumen()
+    {
+        ResumenEpisodio r = new ResumenEpisodio();
+        r.victoria = AgenteHaGanado();
+        r.ruina = EstadoSinSalida();
+        r.empate = !r.ruina && HuboEmpate();
+        r.derrotaEnCombate = !r.victoria && !r.empate && !r.ruina;
+
+        r.recursos = episodioRecursos;
+        r.unidadesPerdidas = episodioUnidadesPerdidas;
+        r.nivelMaximo = episodioNivelMaximo;
+        r.edificios = ContarMisEdificios();
+        r.ataquesLanzados = episodioAtaquesLanzados;
+        r.danoInfligidoFraccion = episodioDanoInfligido / refSaludCastillo;
+
+        AsegurarContadores();
+        int validas = 0;
+        foreach (int v in episodioAccionesValidas) validas += v;
+
+        r.decisiones = episodioDecisiones;
+        r.recolectoresMax = episodioRecolectoresMax;
+        r.unidadesMax = episodioUnidadesMax;
+        r.desfasePoblacionMax = episodioDesfasePoblacionMax;
+        r.tasaInvalidas = episodioDecisiones > 0 ? 1f - (float)validas / episodioDecisiones : 0f;
+        r.fraccionConOciosos = episodioDecisiones > 0 ? (float)episodioDecisionesConOciosos / episodioDecisiones : 0f;
+        // Copias: los contadores se ponen a cero al reiniciar el episodio
+        r.accionesLanzadas = (int[])episodioAccionesLanzadas.Clone();
+        r.accionesValidas = (int[])episodioAccionesValidas.Clone();
+        return r;
     }
 
     // Devuelve la recompensa acumulada y la pone a cero (un step de RL)

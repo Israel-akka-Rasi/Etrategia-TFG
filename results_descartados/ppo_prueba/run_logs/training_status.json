@@ -1,0 +1,29 @@
+{
+    "AgenteRTS": {
+        "checkpoints": [
+            {
+                "steps": 36782,
+                "file_path": "results\\ppo_prueba\\AgenteRTS\\AgenteRTS-36782.onnx",
+                "reward": -1.6208214121205466,
+                "creation_time": 1789987727.7725492,
+                "auxillary_file_paths": [
+                    "results\\ppo_prueba\\AgenteRTS\\AgenteRTS-36782.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 36782,
+            "file_path": "results\\ppo_prueba\\AgenteRTS.onnx",
+            "reward": -1.6208214121205466,
+            "creation_time": 1789987727.7725492,
+            "auxillary_file_paths": [
+                "results\\ppo_prueba\\AgenteRTS\\AgenteRTS-36782.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.1+cpu"
+    }
+}

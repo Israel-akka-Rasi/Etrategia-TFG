@@ -1,0 +1,42 @@
+behaviors:
+  AgenteRTS:
+    trainer_type: ppo
+
+    hyperparameters:
+      # Cuántas experiencias se acumulan antes de actualizar la red.
+      # Valores altos = aprendizaje más estable pero más lento.
+      batch_size: 256
+      buffer_size: 4096
+
+      learning_rate: 0.0003
+      learning_rate_schedule: linear
+
+      beta: 0.01          # fomenta la exploración (entropía). 0.03 se eligió con el entorno roto
+      epsilon: 0.2        # límite de cambio de política por actualización
+      lambd: 0.95
+      num_epoch: 3
+
+    network_settings:
+      # Red pequeña: la entrada son 22 números, no imágenes.
+      hidden_units: 128
+      num_layers: 2
+      normalize: true     # normaliza las observaciones automáticamente
+
+    reward_signals:
+      extrinsic:
+        gamma: 0.998      # EXPERIMENTO: antes 0.99. Horizonte ~500 decisiones, similar a la duración de una partida
+        strength: 1.0
+
+    # Presupuesto TOTAL de entrenamiento en pasos de decisión (sumando las 4 copias).
+    # No es la longitud del episodio: el episodio lo cierra el propio entorno (600 s).
+    # Con 1 decisión por segundo de juego, 500.000 pasos son unas 1.000 partidas.
+    max_steps: 500000
+    time_horizon: 128
+
+    # Cada punto de TensorBoard promedia los episodios terminados en este intervalo.
+    # Con 10.000 pasos entran unas 20 partidas por punto: la tasa de victoria
+    # deja de ser ruido (con 2.000 solo entraban 3-4).
+    summary_freq: 10000
+
+    keep_checkpoints: 5
+    checkpoint_interval: 50000

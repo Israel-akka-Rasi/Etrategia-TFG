@@ -68,6 +68,15 @@ public class Tropa : MonoBehaviour
         return miArea;
     }
 
+    // Corrige el área si se registró antes de tener padre (ver AreaPartida.Adoptar)
+    public void CambiarArea(AreaPartida nueva)
+    {
+        if (nueva == null || nueva == miArea) return;
+        if (miArea != null) miArea.Desregistrar(this);
+        miArea = nueva;
+        miArea.Registrar(this);
+    }
+
     void Awake()
     {
         MiArea().Registrar(this);
@@ -131,11 +140,25 @@ public class Tropa : MonoBehaviour
         if (agente != null && velocidadOriginal > 0f) agente.speed = velocidadOriginal;
     }
 
-    // Orden de movimiento "libre" (la da el jugador o un spawn)
+    // Orden de movimiento "libre" (la da el jugador, el agente, la IA o un spawn)
     public void OrdenarMovimiento(Vector3 destinoFinal)
     {
-        agente.SetDestination(destinoFinal);
+        // Combate guarda el destino: así, si se cruza con enemigos por el camino,
+        // pelea con ellos y después retoma la marcha hasta aquí.
+        if (combate != null) combate.FijarDestino(destinoFinal);
+
+        bool aceptada = NavegacionSegura.IrA(agente, destinoFinal);
         ReiniciarMedidor();
+
+        // DEPURACIÓN: una orden rechazada se perdía en silencio
+        if (!aceptada)
+        {
+            string motivo = (agente == null) ? "sin NavMeshAgent"
+                          : !agente.isActiveAndEnabled ? "NavMeshAgent desactivado"
+                          : !agente.isOnNavMesh ? "fuera de la malla de navegación"
+                          : "destino no válido";
+            DepuradorTropas.Anotar($"RECHAZADA {name}: orden de mover no aceptada ({motivo}).");
+        }
     }
 
     // ====================================================================
@@ -222,10 +245,11 @@ public class Tropa : MonoBehaviour
         }
         else if (atacante != null) // Seguimos vivos y alguien nos pegó
         {
-            // Instinto de supervivencia: si no estábamos atacando a nadie, contraatacamos
+            // Instinto de supervivencia: si no estábamos atacando a nadie, contraatacamos.
+            // Combate decide si responde: no lo hace si se está retirando por una
+            // orden de mover, y no borra las órdenes que tuviera la unidad.
             if (combate != null && !combate.TieneObjetivo())
             {
-                Debug.Log("😡 " + gameObject.name + " se defiende de " + atacante.gameObject.name);
                 combate.OrdenarAtaque(atacante);
             }
         }

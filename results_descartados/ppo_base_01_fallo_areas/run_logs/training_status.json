@@ -1,0 +1,65 @@
+{
+    "AgenteRTS": {
+        "checkpoints": [
+            {
+                "steps": 349996,
+                "file_path": "results\\ppo_base_01\\AgenteRTS\\AgenteRTS-349996.onnx",
+                "reward": -1.555499892681837,
+                "creation_time": 1790187598.6191943,
+                "auxillary_file_paths": [
+                    "results\\ppo_base_01\\AgenteRTS\\AgenteRTS-349996.pt"
+                ]
+            },
+            {
+                "steps": 399997,
+                "file_path": "results\\ppo_base_01\\AgenteRTS\\AgenteRTS-399997.onnx",
+                "reward": -1.6254999516531825,
+                "creation_time": 1790188033.5396295,
+                "auxillary_file_paths": [
+                    "results\\ppo_base_01\\AgenteRTS\\AgenteRTS-399997.pt"
+                ]
+            },
+            {
+                "steps": 449949,
+                "file_path": "results\\ppo_base_01\\AgenteRTS\\AgenteRTS-449949.onnx",
+                "reward": -1.629100003093481,
+                "creation_time": 1790188467.7118812,
+                "auxillary_file_paths": [
+                    "results\\ppo_base_01\\AgenteRTS\\AgenteRTS-449949.pt"
+                ]
+            },
+            {
+                "steps": 499908,
+                "file_path": "results\\ppo_base_01\\AgenteRTS\\AgenteRTS-499908.onnx",
+                "reward": -1.5865001324564219,
+                "creation_time": 1790188904.0637138,
+                "auxillary_file_paths": [
+                    "results\\ppo_base_01\\AgenteRTS\\AgenteRTS-499908.pt"
+                ]
+            },
+            {
+                "steps": 500019,
+                "file_path": "results\\ppo_base_01\\AgenteRTS\\AgenteRTS-500019.onnx",
+                "reward": -1.5775000751018524,
+                "creation_time": 1790188904.1235561,
+                "auxillary_file_paths": [
+                    "results\\ppo_base_01\\AgenteRTS\\AgenteRTS-500019.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 500019,
+            "file_path": "results\\ppo_base_01\\AgenteRTS.onnx",
+            "reward": -1.5775000751018524,
+            "creation_time": 1790188904.1235561,
+            "auxillary_file_paths": [
+                "results\\ppo_base_01\\AgenteRTS\\AgenteRTS-500019.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.1+cpu"
+    }
+}

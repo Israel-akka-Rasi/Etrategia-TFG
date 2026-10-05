@@ -45,9 +45,32 @@ public class BaseMilitar : MonoBehaviour
         return miArea;
     }
 
+    // ¿Hemos llegado a guardar el estado de arranque?
+    private bool estadoInicialGuardado = false;
+
     void Awake()
     {
         MiArea().Registrar(this);
+
+        // El estado inicial se guarda AQUÍ y no en Start: ML-Agents puede pedir
+        // un reinicio de episodio antes de que Start se ejecute, y entonces
+        // restauraríamos ceros y los dejaríamos grabados como valores buenos.
+        GuardarEstadoInicial();
+    }
+
+    void GuardarEstadoInicial()
+    {
+        if (estadoInicialGuardado) return;
+
+        saludMaxima = salud;
+        maderaInicial = madera;
+        piedraInicial = piedra;
+        oroInicial = oro;
+        poblacionInicial = poblacionActual;
+        poblacionMaximaInicial = poblacionMaxima;
+        nivelInicial = nivelCastillo;
+
+        estadoInicialGuardado = true;
     }
 
     void OnDestroy()
@@ -57,15 +80,7 @@ public class BaseMilitar : MonoBehaviour
 
     void Start()
     {
-        saludMaxima = salud;
-
-        // Guardamos los valores de arranque (los que pusiste en el Inspector)
-        maderaInicial = madera;
-        piedraInicial = piedra;
-        oroInicial = oro;
-        poblacionInicial = poblacionActual;
-        poblacionMaximaInicial = poblacionMaxima;
-        nivelInicial = nivelCastillo;
+        GuardarEstadoInicial(); // por si acaso; normalmente ya se hizo en Awake
 
         // --- TROPA INICIAL GRATIS: un Leñador ---
         SpawnTropaInicial();
@@ -89,6 +104,14 @@ public class BaseMilitar : MonoBehaviour
     // ====================================================================
     public void ReiniciarEstado()
     {
+        // Sin estado guardado no hay nada que restaurar: restaurar ceros aquí
+        // dejaría el castillo inservible para el resto de la partida.
+        if (!estadoInicialGuardado)
+        {
+            GuardarEstadoInicial();
+            return;
+        }
+
         salud = saludMaxima;
         if (barraSalud != null) barraSalud.fillAmount = 1f;
 
@@ -124,10 +147,15 @@ public class BaseMilitar : MonoBehaviour
     // --- CONEXIÓN CON LA INTERFAZ ---
     public void ActualizarTextosUI()
     {
-        if (equipo == 0 && UIManager.Instancia != null)
-        {
-            UIManager.Instancia.ActualizarEconomia(nivelCastillo, poblacionActual, poblacionMaxima, madera, piedra, oro);
-        }
+        if (equipo != 0 || UIManager.Instancia == null) return;
+
+        // Solo el castillo del área que estamos viendo escribe en la interfaz.
+        // Con varias áreas en la escena, si no, cada castillo azul pisaba los
+        // números de los demás y la interfaz mezclaba partidas.
+        AreaPartida area = MiArea();
+        if (area != null && area != AreaPartida.AreaVisible()) return;
+
+        UIManager.Instancia.ActualizarEconomia(nivelCastillo, poblacionActual, poblacionMaxima, madera, piedra, oro);
     }
 
     [Header("Evolución")]
@@ -188,6 +216,8 @@ public class BaseMilitar : MonoBehaviour
             poblacionMaxima += poblacionPorNivel;
 
             string quien = (equipo == 0) ? "EL JUGADOR" : "EL ENEMIGO";
+            AreaPartida areaLog = MiArea();
+            if (areaLog != null) quien = $"[A{areaLog.idArea}] {quien}";
             Debug.Log($"{quien} ha subido a Nivel {nivelCastillo} (pob. máx: {poblacionMaxima}). Costó: M:{maderaNecesaria} P:{piedraNecesaria} O:{oroNecesario}");
 
             if (equipo == 0) ActualizarInterfazAlMejorar();
@@ -213,7 +243,10 @@ public class BaseMilitar : MonoBehaviour
     // --- LÓGICA DE COMBATE ---
     public void RecibirDano(int cantidad)
     {
-        salud -= cantidad;
+        // La vida nunca baja de cero. Sin esto, un castillo ya destruido seguía
+        // acumulando daño hasta valores negativos, que podrían colarse en las
+        // observaciones del agente como un dato sin sentido.
+        salud = Mathf.Max(0f, salud - cantidad);
 
         if (barraSalud != null)
         {

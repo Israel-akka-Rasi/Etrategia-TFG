@@ -1,0 +1,56 @@
+{
+    "AgenteRTS": {
+        "checkpoints": [
+            {
+                "steps": 49891,
+                "file_path": "results\\ppo_2\\AgenteRTS\\AgenteRTS-49891.onnx",
+                "reward": null,
+                "creation_time": 1789998041.0673332,
+                "auxillary_file_paths": [
+                    "results\\ppo_2\\AgenteRTS\\AgenteRTS-49891.pt"
+                ]
+            },
+            {
+                "steps": 99913,
+                "file_path": "results\\ppo_2\\AgenteRTS\\AgenteRTS-99913.onnx",
+                "reward": -1.2255000099539757,
+                "creation_time": 1789999877.8466046,
+                "auxillary_file_paths": [
+                    "results\\ppo_2\\AgenteRTS\\AgenteRTS-99913.pt"
+                ]
+            },
+            {
+                "steps": 149958,
+                "file_path": "results\\ppo_2\\AgenteRTS\\AgenteRTS-149958.onnx",
+                "reward": -1.2616249877028167,
+                "creation_time": 1790001688.0293734,
+                "auxillary_file_paths": [
+                    "results\\ppo_2\\AgenteRTS\\AgenteRTS-149958.pt"
+                ]
+            },
+            {
+                "steps": 150086,
+                "file_path": "results\\ppo_2\\AgenteRTS\\AgenteRTS-150086.onnx",
+                "reward": -1.2616249877028167,
+                "creation_time": 1790001688.0744383,
+                "auxillary_file_paths": [
+                    "results\\ppo_2\\AgenteRTS\\AgenteRTS-150086.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 150086,
+            "file_path": "results\\ppo_2\\AgenteRTS.onnx",
+            "reward": -1.2616249877028167,
+            "creation_time": 1790001688.0744383,
+            "auxillary_file_paths": [
+                "results\\ppo_2\\AgenteRTS\\AgenteRTS-150086.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.1+cpu"
+    }
+}

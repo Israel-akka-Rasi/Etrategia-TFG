@@ -113,7 +113,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Recurso
   tipo: 0
-  reservaHabilitada: 50
+  reservaHabilitada: 150
   cantidadPorTanda: 2
 --- !u!208 &-8080074507165763317
 NavMeshObstacle:
@@ -122,7 +122,7 @@ NavMeshObstacle:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5228165265429585968}
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Shape: 1
   m_Extents: {x: 0.342, y: 0.606, z: 0.36}

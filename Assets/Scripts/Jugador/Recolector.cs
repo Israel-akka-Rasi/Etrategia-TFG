@@ -140,7 +140,7 @@ public class Recolector : MonoBehaviour
 
         if (distancia <= distanciaDeTrabajo)
         {
-            agente.isStopped = true;
+            NavegacionSegura.Frenar(agente, true);
             temporizador += Time.deltaTime;
 
             if (temporizador >= tiempoEntreRecoleccion)
@@ -151,8 +151,7 @@ public class Recolector : MonoBehaviour
         }
         else
         {
-            agente.isStopped = false;
-            agente.SetDestination(recursoObjetivo.transform.position);
+            NavegacionSegura.IrA(agente, recursoObjetivo.transform.position, reanudar: true);
         }
     }
 
@@ -189,8 +188,7 @@ public class Recolector : MonoBehaviour
 
         if (agente != null && agente.isOnNavMesh)
         {
-            agente.isStopped = false;
-            agente.SetDestination(castillo.transform.position);
+            NavegacionSegura.IrA(agente, castillo.transform.position, reanudar: true);
         }
     }
 
@@ -203,8 +201,7 @@ public class Recolector : MonoBehaviour
 
         if (distancia > distanciaEntrega)
         {
-            agente.isStopped = false;
-            agente.SetDestination(castillo.transform.position);
+            NavegacionSegura.IrA(agente, castillo.transform.position, reanudar: true);
             return;
         }
 
@@ -224,8 +221,7 @@ public class Recolector : MonoBehaviour
 
         if (recursoObjetivo != null && agente.isOnNavMesh)
         {
-            agente.isStopped = false;
-            agente.SetDestination(recursoObjetivo.transform.position);
+            NavegacionSegura.IrA(agente, recursoObjetivo.transform.position, reanudar: true);
         }
     }
 

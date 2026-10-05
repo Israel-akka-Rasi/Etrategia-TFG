@@ -1,0 +1,388 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &937969213204112086
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2980356563505152426}
+  - component: {fileID: 5809999987468731108}
+  m_Layer: 0
+  m_Name: GestorPartida
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2980356563505152426
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 937969213204112086}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8621179628706987517}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5809999987468731108
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 937969213204112086}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a05f9bac08b79024682821320e47f92c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GestorPartida
+  modoEntrenamiento: 1
+  regenerarMapaCadaEpisodio: 0
+  contenedorDinamico: {fileID: 872784794380725344}
+  limitarDuracion: 1
+  segundosMaximosPartida: 600
+  teclaReinicio: 114
+--- !u!1 &992301698666223024
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8621179628706987517}
+  - component: {fileID: 2801965359792057375}
+  m_Layer: 0
+  m_Name: AreaPartida
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8621179628706987517
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 992301698666223024}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1745456983645042412}
+  - {fileID: 2980356563505152426}
+  - {fileID: 872784794380725344}
+  - {fileID: 5803215376067313726}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2801965359792057375
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 992301698666223024}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fda36d81936c8de4b86612a98f77e3c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AreaPartida
+  idArea: 0
+  esAreaVisible: 1
+  contenedorDinamico: {fileID: 872784794380725344}
+--- !u!1 &6461154730838508065
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5803215376067313726}
+  - component: {fileID: 5312624834777286911}
+  - component: {fileID: 6632788325424290904}
+  - component: {fileID: 2235654272867452632}
+  m_Layer: 0
+  m_Name: EntornoRL
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5803215376067313726
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6461154730838508065}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 574.14374, y: 0, z: 227.27113}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8621179628706987517}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5312624834777286911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6461154730838508065}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f00cdd9874302b45932b0ab18ae2143, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EntornoRL
+  equipoAgente: 0
+  prefabCampamento: {fileID: 2943841262778053324, guid: 222a5744601ba904e9b885b2f3fa1c12, type: 3}
+  prefabGaleria: {fileID: 4035413318245885786, guid: 0f806018c59916843ad29aa12cf73c19, type: 3}
+  prefabGremio: {fileID: 156891285987175295, guid: af6435961b212c6499f48485152238dd, type: 3}
+  prefabColiseo: {fileID: 6866560407148171639, guid: a9be25af96668404b9a818e516bf5c7e, type: 3}
+  radioConstruccionMin: 3
+  radioConstruccion: 14
+  distanciaEntreEdificios: 4
+  capaObstaculos:
+    serializedVersion: 2
+    m_Bits: 8
+  radioLibre: 2.5
+  refMadera: 500
+  refPiedra: 300
+  refOro: 200
+  refPoblacion: 30
+  refUnidades: 10
+  refSaludCastillo: 2000
+  radioAmenazaRecolectores: 15
+  terminarSiNoHaySalida: 1
+  recompensaVictoria: 1
+  recompensaDerrota: -1
+  pesoDanoAlEnemigo: 0.5
+  pesoDanoRecibido: 0.5
+  pesoRecursos: 0.0002
+  pesoSubirNivel: 0.05
+  pesoEdificio: 0.03
+  pesoUnidadPerdida: -0.01
+  penalizacionAccionInvalida: -0.0005
+  penalizacionPorPaso: 0
+  penalizacionSinSalida: -1
+--- !u!114 &6632788325424290904
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6461154730838508065}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d1c4e0b1822b495aa52bc52839ecb30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.ML-Agents::Unity.MLAgents.Policies.BehaviorParameters
+  m_BrainParameters:
+    VectorObservationSize: 22
+    NumStackedVectorObservations: 1
+    m_ActionSpec:
+      m_NumContinuousActions: 0
+      BranchSizes: 14000000
+    VectorActionSize: 14000000
+    VectorActionDescriptions: []
+    VectorActionSpaceType: 0
+    hasUpgradedBrainParametersWithActionSpec: 1
+  m_Model: {fileID: 0}
+  m_InferenceDevice: 0
+  m_BehaviorType: 0
+  m_BehaviorName: AgenteRTS
+  TeamId: 0
+  m_UseChildSensors: 1
+  m_UseChildActuators: 1
+  m_DeterministicInference: 0
+  m_ObservableAttributeHandling: 0
+--- !u!114 &2235654272867452632
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6461154730838508065}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 927778068648ef04097e46c1816ac7a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AgenteRTS
+  agentParameters:
+    maxStep: 0
+  hasUpgradedFromAgentParameters: 1
+  MaxStep: 0
+  entorno: {fileID: 0}
+  segundosEntreDecisiones: 1
+  usarMascara: 1
+  registrarResumenEnConsola: 1
+--- !u!1 &7207134631555825067
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1745456983645042412}
+  - component: {fileID: 4301713667258241713}
+  - component: {fileID: 2767516404492875766}
+  - component: {fileID: 7659525988199929583}
+  m_Layer: 7
+  m_Name: Mapa
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1745456983645042412
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7207134631555825067}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8621179628706987517}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4301713667258241713
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7207134631555825067}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d6e69267c391c44590af0a0be825f79, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GeneradorTablero
+  usarSemillaFija: 1
+  semilla: 12345
+  semillaDistintaPorArea: 1
+  anchoMapa: 100
+  altoMapa: 100
+  cantidadBases: 2
+  distanciaMinimaBases: 15
+  radioDespejado: 3
+  escalaRuido: 0.15
+  escalaRuidoAgua: 0.08
+  umbralAgua: 0.25
+  densidadArboles: 0.55
+  densidadMontanas: 0.75
+  probabilidadOro: 0.02
+  probabilidadDecoracion: 0.05
+  prefabAgua: {fileID: 5101029694890535965, guid: 6d6dbf089a0da424b8b80c26682d83da, type: 3}
+  prefabHierba: {fileID: 8428439812002470205, guid: 3250af28fc8773a44901b214cfe11eaa, type: 3}
+  prefabMina: {fileID: 1647189826293647047, guid: db45e7beb32a3b345a8b8337bb37d88c, type: 3}
+  prefabBaseAzul: {fileID: 4511585181900131050, guid: 887f5f7e34d745a46a47e63568e7e0d6, type: 3}
+  prefabBaseRoja: {fileID: 3751665324954817186, guid: 15b6f397efafd4c4686d47b9313ecbae, type: 3}
+  "prefabsMonta\xF1as":
+  - {fileID: 9209908622903840482, guid: 6fc23b109a93cae49b82021285b2f77b, type: 3}
+  - {fileID: 3980247624598818328, guid: 331fdde2742f89c48a37aa867df2dcf0, type: 3}
+  - {fileID: 6956284852569097890, guid: f4b4522e6c33c264b84bd790bf951435, type: 3}
+  - {fileID: 7448391010893327245, guid: 2dce143d5a9b5a2478f428e9cbb2897a, type: 3}
+  prefabsArboles:
+  - {fileID: 5228165265429585968, guid: c01e3ee0a4e87e24ebd4d13e8ff9a4d9, type: 3}
+  - {fileID: 2415757172710116609, guid: dca55b473e853bc47b27b7b180aae813, type: 3}
+  - {fileID: 862546278412021516, guid: beadaa43cafeca14cb5b4a57975eca97, type: 3}
+  prefabsDecoraciones: []
+  distanciaX: 1.73
+  distanciaZ: 1.5
+--- !u!114 &2767516404492875766
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7207134631555825067}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a5ac11cc976e418e8d13136b07e1f52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshSurface
+  m_SerializedVersion: 0
+  m_AgentTypeID: 0
+  m_CollectObjects: 0
+  m_Size: {x: 10, y: 10, z: 10}
+  m_Center: {x: 0, y: 2, z: 0}
+  m_LayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_UseGeometry: 0
+  m_DefaultArea: 0
+  m_GenerateLinks: 0
+  m_IgnoreNavMeshAgent: 1
+  m_IgnoreNavMeshObstacle: 1
+  m_OverrideTileSize: 0
+  m_TileSize: 256
+  m_OverrideVoxelSize: 0
+  m_VoxelSize: 0.033333335
+  m_MinRegionArea: 2
+  m_NavMeshData: {fileID: 0}
+  m_BuildHeightMesh: 0
+--- !u!114 &7659525988199929583
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7207134631555825067}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2496777dd2fe223458f458b69db93b2f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ReveladorNiebla
+  radioVision: 8
+  capaSuelo:
+    serializedVersion: 2
+    m_Bits: 0
+--- !u!1 &9032750794029838125
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 872784794380725344}
+  m_Layer: 0
+  m_Name: ContenedorDinamico
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &872784794380725344
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9032750794029838125}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8621179628706987517}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

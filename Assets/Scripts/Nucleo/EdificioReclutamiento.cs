@@ -18,6 +18,13 @@ public class EdificioReclutamiento : MonoBehaviour
     public int costeConstruccionPiedra = 0;
     public int costeConstruccionOro = 0;
 
+    [Header("Límite de construcción")]
+    // Copias máximas de este edificio por bando. Varias copias no aportan nada
+    // (la población es la que limita cuántas tropas salen), y sin tope el agente
+    // gastaba madera levantando hasta 18 Campamentos Mineros por partida.
+    // Se comprueba en PuedeConstruirlo, así que vale para el jugador, la IA y el agente.
+    public int maximoPorBando = 3;
+
     [Header("Configuración de la Tropa")]
     public GameObject prefabTropa;
     public int costeMadera = 20;
@@ -45,6 +52,15 @@ public class EdificioReclutamiento : MonoBehaviour
     {
         if (miArea == null) miArea = AreaPartida.Resolver(this);
         return miArea;
+    }
+
+    // Corrige el área si se registró antes de tener padre (ver AreaPartida.Adoptar)
+    public void CambiarArea(AreaPartida nueva)
+    {
+        if (nueva == null || nueva == miArea) return;
+        if (miArea != null) miArea.Desregistrar(this);
+        miArea = nueva;
+        miArea.Registrar(this);
     }
 
     void Awake()
@@ -104,7 +120,7 @@ public class EdificioReclutamiento : MonoBehaviour
         return datos;
     }
 
-    // ¿Este castillo tiene nivel y recursos para levantar este edificio?
+    // ¿Este castillo tiene nivel, recursos y cupo para levantar este edificio?
     // 'motivo' explica el fallo (para logs y para la interfaz).
     public bool PuedeConstruirlo(BaseMilitar castillo, out string motivo)
     {
@@ -120,6 +136,12 @@ public class EdificioReclutamiento : MonoBehaviour
             return false;
         }
 
+        if (maximoPorBando > 0 && CopiasConstruidas(castillo) >= maximoPorBando)
+        {
+            motivo = $"Máximo alcanzado ({maximoPorBando})";
+            return false;
+        }
+
         if (castillo.madera < costeConstruccionMadera
          || castillo.piedra < costeConstruccionPiedra
          || castillo.oro < costeConstruccionOro)
@@ -130,6 +152,21 @@ public class EdificioReclutamiento : MonoBehaviour
 
         motivo = "";
         return true;
+    }
+
+    // Cuántos edificios de este mismo tipo tiene ya el bando de ese castillo, en su partida
+    int CopiasConstruidas(BaseMilitar castillo)
+    {
+        AreaPartida area = castillo.MiArea();
+        if (area == null) return 0;
+
+        int copias = 0;
+        foreach (EdificioReclutamiento e in area.Edificios())
+        {
+            if (e != null && e.equipo == castillo.equipo && e.nombreEdificio == nombreEdificio)
+                copias++;
+        }
+        return copias;
     }
 
     // Descuenta el precio del edificio del castillo dueño.
